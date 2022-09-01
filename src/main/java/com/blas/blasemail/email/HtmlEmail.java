@@ -20,37 +20,37 @@ import org.springframework.stereotype.Component;
 @Async
 public class HtmlEmail {
 
-    @Autowired
-    private EmailConfigurationProperties emailConfigurationProperties;
+  @Autowired
+  private EmailConfigurationProperties emailConfigurationProperties;
 
-    public void sendEmail(String emailTo, String title, String content) throws MessagingException {
-        String RECEIVE_EMAIL = emailTo;
-        Properties props = new Properties();
-        props.put("mail.smtp.host", "smtp.gmail.com");
-        props.put("mail.smtp.port", emailConfigurationProperties.getPortSender());
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.smtp.starttls.required", "true");
-        props.put("mail.smtp.ssl.protocols", "TLSv1.2");
-        props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+  public void sendEmail(String emailTo, String title, String content) throws MessagingException {
+    String RECEIVE_EMAIL = emailTo;
+    Properties props = new Properties();
+    props.put("mail.smtp.host", "smtp.gmail.com");
+    props.put("mail.smtp.port", emailConfigurationProperties.getPortSender());
+    props.put("mail.smtp.auth", "true");
+    props.put("mail.smtp.starttls.enable", "true");
+    props.put("mail.smtp.starttls.required", "true");
+    props.put("mail.smtp.ssl.protocols", "TLSv1.2");
+    props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
 
-        Session session = Session.getDefaultInstance(props, new javax.mail.Authenticator() {
-            protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(emailConfigurationProperties.getEmailSender(),
-                        emailConfigurationProperties.getPassword());
-            }
-        });
-        MimeMessage message = new MimeMessage(session);
-        message.setFrom(new InternetAddress(emailConfigurationProperties.getEmailSender()));
-        message.addRecipient(Message.RecipientType.TO, new InternetAddress(RECEIVE_EMAIL));
-        message.setSubject(title, "utf8");
+    Session session = Session.getDefaultInstance(props, new javax.mail.Authenticator() {
+      protected PasswordAuthentication getPasswordAuthentication() {
+        return new PasswordAuthentication(emailConfigurationProperties.getEmailSender(),
+            emailConfigurationProperties.getPassword());
+      }
+    });
+    MimeMessage message = new MimeMessage(session);
+    message.setFrom(new InternetAddress(emailConfigurationProperties.getEmailSender()));
+    message.addRecipient(Message.RecipientType.TO, new InternetAddress(RECEIVE_EMAIL));
+    message.setSubject(title, "utf8");
 
-        MimeBodyPart messageBodyPartContent = new MimeBodyPart();
-        messageBodyPartContent.setContent(content, "text/html; charset=utf-8");
+    MimeBodyPart messageBodyPartContent = new MimeBodyPart();
+    messageBodyPartContent.setContent(content, "text/html; charset=utf-8");
 
-        Multipart multipart = new MimeMultipart();
-        multipart.addBodyPart(messageBodyPartContent);
-        message.setContent(multipart);
-        Transport.send(message);
-    }
+    Multipart multipart = new MimeMultipart();
+    multipart.addBodyPart(messageBodyPartContent);
+    message.setContent(multipart);
+    Transport.send(message);
+  }
 }
