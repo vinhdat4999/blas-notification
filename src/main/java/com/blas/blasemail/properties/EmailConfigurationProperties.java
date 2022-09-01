@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "email")
 public class EmailConfigurationProperties {
 
-    private String emailSender;
-    private String password;
-    private int portSender;
+  private String emailSender;
+  private String password;
+  private int portSender;
 }

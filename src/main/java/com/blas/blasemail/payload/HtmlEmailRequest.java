@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class HtmlEmailRequest {
 
-    private String sendTo;
-    private String title;
-    private String content;
+  private String emailTo;
+  private String title;
+  private String content;
 }
