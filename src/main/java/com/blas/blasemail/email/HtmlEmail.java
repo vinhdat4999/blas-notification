@@ -1,8 +1,8 @@
 package com.blas.blasemail.email;
 
-import com.blas.blasemail.payload.HtmlEmailRequest;
-import com.blas.blasemail.payload.HtmlEmailResponse;
-import com.blas.blasemail.properties.EmailConfigurationProperties;
+import com.blas.blascommon.payload.HtmlEmailRequest;
+import com.blas.blascommon.payload.HtmlEmailResponse;
+import com.blas.blascommon.properties.EmailConfigurationProperties;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
