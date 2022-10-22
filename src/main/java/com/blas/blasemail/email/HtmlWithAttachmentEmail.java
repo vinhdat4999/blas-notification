@@ -1,20 +1,29 @@
 package com.blas.blasemail.email;
 
-import com.blas.blascommon.security.SecurityUtils;
+import static com.blas.blascommon.security.SecurityUtils.base64Decode;
+import static com.blas.blascommon.utils.fileutils.FileUtils.delete;
+
+import com.blas.blascommon.utils.fileutils.FileUtils;
+import com.blas.blasemail.payload.HtmlEmailWithAttachmentRequest;
+import com.blas.blasemail.payload.HtmlEmailWithAttachmentResponse;
 import com.blas.blasemail.properties.EmailConfigurationProperties;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
-import javax.activation.DataHandler;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
-import javax.mail.util.ByteArrayDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -26,8 +35,8 @@ public class HtmlWithAttachmentEmail {
   @Autowired
   private EmailConfigurationProperties emailConfigurationProperties;
 
-  public void sendEmail(String emailTo, String title, String content, String base64FileContent)
-      throws MessagingException {
+  public HtmlEmailWithAttachmentResponse sendEmail(
+      List<HtmlEmailWithAttachmentRequest> htmlEmailWithAttachmentRequestPayloadList) {
     Properties props = new Properties();
     props.put("mail.smtp.host", "smtp.gmail.com");
     props.put("mail.smtp.port", emailConfigurationProperties.getPortSender());
@@ -38,31 +47,56 @@ public class HtmlWithAttachmentEmail {
     props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
 
     Session session = Session.getDefaultInstance(props, new javax.mail.Authenticator() {
+      @Override
       protected PasswordAuthentication getPasswordAuthentication() {
         return new PasswordAuthentication(emailConfigurationProperties.getEmailSender(),
             emailConfigurationProperties.getPassword());
       }
     });
 
+    AtomicInteger sentEmailNum = new AtomicInteger();
+    List<HtmlEmailWithAttachmentRequest> htmlEmailWithAttachmentRequestFailedList = new ArrayList<>();
     MimeMessage message = new MimeMessage(session);
-    message.setFrom(new InternetAddress(emailConfigurationProperties.getEmailSender()));
-    message.addRecipient(Message.RecipientType.TO, new InternetAddress(emailTo));
-    message.setSubject(title, "utf8");
+    try {
+      message.setFrom(new InternetAddress(emailConfigurationProperties.getEmailSender()));
+    } catch (MessagingException e) {
+      e.printStackTrace();
+    }
+    htmlEmailWithAttachmentRequestPayloadList.forEach(htmlEmailWithAttachmentPayload -> {
+      try {
+        message.addRecipient(Message.RecipientType.TO,
+            new InternetAddress(htmlEmailWithAttachmentPayload.getEmailTo()));
+        message.setSubject(htmlEmailWithAttachmentPayload.getTitle(), "utf8");
 
-    MimeBodyPart messageBodyPartContent = new MimeBodyPart();
-    messageBodyPartContent.setContent(content, "text/html; charset=utf-8");
-
-    Multipart multipart = new MimeMultipart();
-    multipart.addBodyPart(messageBodyPartContent);
-
-    MimeBodyPart messageBodyPartFile = new MimeBodyPart();
-    byte[] fileContent = SecurityUtils.base64Decode(base64FileContent);
-    ByteArrayDataSource byteArrayDataSource = new ByteArrayDataSource(fileContent, "");
-    messageBodyPartFile.setDataHandler(new DataHandler(byteArrayDataSource));
-    messageBodyPartFile.setFileName(byteArrayDataSource.getName());
-    multipart.addBodyPart(messageBodyPartFile);
-
-    message.setContent(multipart);
-    Transport.send(message);
+        MimeBodyPart messageBodyPartContent = new MimeBodyPart();
+        messageBodyPartContent.setContent(htmlEmailWithAttachmentPayload.getContent(),
+            "text/html; charset=utf-8");
+        Multipart multipart = new MimeMultipart();
+        multipart.addBodyPart(messageBodyPartContent);
+        byte[] fileContent = base64Decode(htmlEmailWithAttachmentPayload.getBase64FileContent());
+        FileUtils.writeByteArrayToFile(fileContent,
+            "temp/" + htmlEmailWithAttachmentPayload.getFileName());
+        MimeBodyPart attachmentPart = new MimeBodyPart();
+        attachmentPart.attachFile(new File("temp/" + htmlEmailWithAttachmentPayload.getFileName()));
+        multipart.addBodyPart(attachmentPart);
+        message.setContent(multipart);
+        Transport.send(message);
+        sentEmailNum.getAndIncrement();
+      } catch (AddressException e) {
+        e.printStackTrace();
+      } catch (MessagingException e) {
+        e.printStackTrace();
+        htmlEmailWithAttachmentRequestFailedList.add(htmlEmailWithAttachmentPayload);
+      } catch (IOException e) {
+        e.printStackTrace();
+      } finally {
+        delete("temp/" + htmlEmailWithAttachmentPayload.getFileName());
+      }
+    });
+    HtmlEmailWithAttachmentResponse htmlEmailWithAttachmentResponse = new HtmlEmailWithAttachmentResponse();
+    htmlEmailWithAttachmentResponse.setSentEmailNum(sentEmailNum.get());
+    htmlEmailWithAttachmentResponse.setHtmlEmailWithAttachmentRequestFailedList(
+        htmlEmailWithAttachmentRequestFailedList);
+    return htmlEmailWithAttachmentResponse;
   }
 }

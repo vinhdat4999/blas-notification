@@ -1,13 +1,19 @@
 package com.blas.blasemail.email;
 
+import com.blas.blasemail.payload.HtmlEmailRequest;
+import com.blas.blasemail.payload.HtmlEmailResponse;
 import com.blas.blasemail.properties.EmailConfigurationProperties;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
@@ -23,8 +29,7 @@ public class HtmlEmail {
   @Autowired
   private EmailConfigurationProperties emailConfigurationProperties;
 
-  public void sendEmail(String emailTo, String title, String content) throws MessagingException {
-    String RECEIVE_EMAIL = emailTo;
+  public HtmlEmailResponse sendEmail(List<HtmlEmailRequest> htmlEmailPayloadList) {
     Properties props = new Properties();
     props.put("mail.smtp.host", "smtp.gmail.com");
     props.put("mail.smtp.port", emailConfigurationProperties.getPortSender());
@@ -35,22 +40,43 @@ public class HtmlEmail {
     props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
 
     Session session = Session.getDefaultInstance(props, new javax.mail.Authenticator() {
+      @Override
       protected PasswordAuthentication getPasswordAuthentication() {
         return new PasswordAuthentication(emailConfigurationProperties.getEmailSender(),
             emailConfigurationProperties.getPassword());
       }
     });
     MimeMessage message = new MimeMessage(session);
-    message.setFrom(new InternetAddress(emailConfigurationProperties.getEmailSender()));
-    message.addRecipient(Message.RecipientType.TO, new InternetAddress(RECEIVE_EMAIL));
-    message.setSubject(title, "utf8");
-
+    try {
+      message.setFrom(new InternetAddress(emailConfigurationProperties.getEmailSender()));
+    } catch (MessagingException e) {
+      e.printStackTrace();
+    }
     MimeBodyPart messageBodyPartContent = new MimeBodyPart();
-    messageBodyPartContent.setContent(content, "text/html; charset=utf-8");
-
-    Multipart multipart = new MimeMultipart();
-    multipart.addBodyPart(messageBodyPartContent);
-    message.setContent(multipart);
-    Transport.send(message);
+    AtomicInteger sentEmailNum = new AtomicInteger();
+    List<HtmlEmailRequest> htmlEmailRequestFailedList = new ArrayList<>();
+    htmlEmailPayloadList.forEach(htmlEmailPayload -> {
+      try {
+        message.addRecipient(Message.RecipientType.TO,
+            new InternetAddress(htmlEmailPayload.getEmailTo()));
+        message.setSubject(htmlEmailPayload.getTitle(), "utf8");
+        messageBodyPartContent.setContent(htmlEmailPayload.getContent(),
+            "text/html; charset=utf-8");
+        Multipart multipart = new MimeMultipart();
+        multipart.addBodyPart(messageBodyPartContent);
+        message.setContent(multipart);
+        Transport.send(message);
+        sentEmailNum.getAndIncrement();
+      } catch (AddressException e) {
+        e.printStackTrace();
+      } catch (MessagingException e) {
+        e.printStackTrace();
+        htmlEmailRequestFailedList.add(htmlEmailPayload);
+      }
+    });
+    HtmlEmailResponse htmlEmailResponse = new HtmlEmailResponse();
+    htmlEmailResponse.setSentEmailNum(sentEmailNum.get());
+    htmlEmailResponse.setHtmlEmailRequestFailedList(htmlEmailRequestFailedList);
+    return htmlEmailResponse;
   }
 }

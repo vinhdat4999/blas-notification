@@ -1,18 +1,18 @@
 server:
-  port: 8080
+  port: 8082
 spring:
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
     url: jdbc:mysql://localhost:3306/blas
     username: root
-    password: 123456
+    password:
   jpa:
     hibernate:
       ddl-auto: none
     show-sql: 'true'
 email:
   emailSender: blascoffeevn@gmail.com
-  password: 0546550566Qq
+  password: tuajjksryooovuoa
   portSender: 465
 #logging:
 #  file:

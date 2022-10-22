@@ -7,5 +7,5 @@ import lombok.Data;
 public class HtmlEmailWithAttachmentResponse {
 
   private int sentEmailNum;
-  private List<HtmlEmailWithAttachmentRequest> htmlEmailWithAttachmentRequestList;
+  private List<HtmlEmailWithAttachmentRequest> htmlEmailWithAttachmentRequestFailedList;
 }
