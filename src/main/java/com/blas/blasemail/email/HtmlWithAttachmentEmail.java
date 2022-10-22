@@ -3,10 +3,10 @@ package com.blas.blasemail.email;
 import static com.blas.blascommon.security.SecurityUtils.base64Decode;
 import static com.blas.blascommon.utils.fileutils.FileUtils.delete;
 
+import com.blas.blascommon.payload.HtmlEmailWithAttachmentRequest;
+import com.blas.blascommon.payload.HtmlEmailWithAttachmentResponse;
+import com.blas.blascommon.properties.EmailConfigurationProperties;
 import com.blas.blascommon.utils.fileutils.FileUtils;
-import com.blas.blasemail.payload.HtmlEmailWithAttachmentRequest;
-import com.blas.blasemail.payload.HtmlEmailWithAttachmentResponse;
-import com.blas.blasemail.properties.EmailConfigurationProperties;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;

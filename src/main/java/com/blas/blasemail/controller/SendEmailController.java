@@ -4,12 +4,12 @@ import static com.blas.blascommon.utils.StringUtils.isBlank;
 import static com.blas.blascommon.utils.ValidUtils.isValidEmail;
 
 import com.blas.blascommon.exceptions.types.BadRequestException;
+import com.blas.blascommon.payload.HtmlEmailRequest;
+import com.blas.blascommon.payload.HtmlEmailResponse;
+import com.blas.blascommon.payload.HtmlEmailWithAttachmentRequest;
+import com.blas.blascommon.payload.HtmlEmailWithAttachmentResponse;
 import com.blas.blasemail.email.HtmlEmail;
 import com.blas.blasemail.email.HtmlWithAttachmentEmail;
-import com.blas.blasemail.payload.HtmlEmailRequest;
-import com.blas.blasemail.payload.HtmlEmailResponse;
-import com.blas.blasemail.payload.HtmlEmailWithAttachmentRequest;
-import com.blas.blasemail.payload.HtmlEmailWithAttachmentResponse;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
