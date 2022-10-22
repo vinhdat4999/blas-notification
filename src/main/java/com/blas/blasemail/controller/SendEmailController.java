@@ -7,7 +7,6 @@ import com.blas.blascommon.exceptions.types.BadRequestException;
 import com.blas.blasemail.email.HtmlEmail;
 import com.blas.blasemail.email.HtmlWithAttachmentEmail;
 import com.blas.blasemail.payload.HtmlEmailRequest;
-import com.blas.blasemail.payload.HtmlEmailResponse;
 import com.blas.blasemail.payload.HtmlEmailWithAttachmentRequest;
 import com.blas.blasemail.payload.HtmlEmailWithAttachmentResponse;
 import java.util.List;
