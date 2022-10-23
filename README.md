@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                            |
 |---------|--------------|------------------------------------------|
+| 1.4.0   | 23/10/2022   | Bump version common to update send email |
 | 1.3.0   | 22/10/2022   | Bump version common to update send email |
 | 1.2.0   | 22/10/2022   | Use Google to send email                 |
 | 1.1.0   | 01/09/2022   | Change method send email                 |
