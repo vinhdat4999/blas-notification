@@ -1,5 +1,10 @@
 package com.blas.blasemail.email;
 
+import static com.blas.blascommon.enums.BlasService.BLAS_EMAIL;
+import static com.blas.blascommon.enums.LogType.ERROR;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
+import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.payload.HtmlEmailRequest;
 import com.blas.blascommon.payload.HtmlEmailResponse;
 import com.blas.blascommon.properties.EmailConfigurationProperties;
@@ -18,6 +23,8 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -25,6 +32,9 @@ import org.springframework.stereotype.Component;
 @Component
 @Async
 public class HtmlEmail {
+
+  @Autowired
+  private CentralizedLogService centralizedLogService;
 
   @Autowired
   private EmailConfigurationProperties emailConfigurationProperties;
@@ -50,6 +60,10 @@ public class HtmlEmail {
     try {
       message.setFrom(new InternetAddress(emailConfigurationProperties.getEmailSender()));
     } catch (MessagingException e) {
+      centralizedLogService.saveLog(BLAS_EMAIL.getServiceName(), ERROR, e.toString(),
+          e.getCause() == null ? EMPTY : e.getCause().toString(),
+          new JSONArray(List.of(emailConfigurationProperties)).toString(), null, null,
+          String.valueOf(new JSONArray(e.getStackTrace())));
       e.printStackTrace();
     }
     MimeBodyPart messageBodyPartContent = new MimeBodyPart();
@@ -68,8 +82,18 @@ public class HtmlEmail {
         Transport.send(message);
         sentEmailNum.getAndIncrement();
       } catch (AddressException e) {
+        centralizedLogService.saveLog(BLAS_EMAIL.getServiceName(), ERROR, e.toString(),
+            e.getCause() == null ? EMPTY : e.getCause().toString(),
+            new JSONArray(List.of(emailConfigurationProperties)).toString(),
+            new JSONObject(htmlEmailPayload).toString(), null,
+            String.valueOf(new JSONArray(e.getStackTrace())));
         e.printStackTrace();
       } catch (MessagingException e) {
+        centralizedLogService.saveLog(BLAS_EMAIL.getServiceName(), ERROR, e.toString(),
+            e.getCause() == null ? EMPTY : e.getCause().toString(),
+            new JSONArray(List.of(emailConfigurationProperties)).toString(),
+            new JSONObject(htmlEmailPayload).toString(), null,
+            String.valueOf(new JSONArray(e.getStackTrace())));
         e.printStackTrace();
         htmlEmailRequestFailedList.add(htmlEmailPayload);
       }

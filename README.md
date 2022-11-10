@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                            |
 |---------|--------------|------------------------------------------|
+| 1.5.0   | 10/11/2022   | Apply Centralized Logger                 |
 | 1.4.0   | 23/10/2022   | Bump version common to update send email |
 | 1.3.0   | 22/10/2022   | Bump version common to update send email |
 | 1.2.0   | 22/10/2022   | Use Google to send email                 |
