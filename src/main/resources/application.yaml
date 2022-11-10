@@ -10,10 +10,11 @@ spring:
     hibernate:
       ddl-auto: none
     show-sql: 'true'
-email:
-  emailSender: blascoffeevn@gmail.com
-  password: tuajjksryooovuoa
-  portSender: 465
+blas:
+  blas-email:
+    emailSender: blasvietnam@gmail.com
+    password: pdaifcxvnvsqyums
+    portSender: 465
 #logging:
 #  file:
 #    name: application.log
