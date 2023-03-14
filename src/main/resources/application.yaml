@@ -11,6 +11,8 @@ spring:
       ddl-auto: none
     show-sql: 'true'
 blas:
+  blas-idp:
+    isSendEmailAlert: true
   blas-email:
     emailSender: blasvietnam@gmail.com
     password: pdaifcxvnvsqyums

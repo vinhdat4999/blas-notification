@@ -6,12 +6,12 @@
     <parent>
         <groupId>com.blas</groupId>
         <artifactId>blas-pom</artifactId>
-        <version>1.0.7</version>
+        <version>1.0.8</version>
         <relativePath></relativePath>
     </parent>
     <groupId>com.blas</groupId>
     <artifactId>blas-email</artifactId>
-    <version>1.5.0</version>
+    <version>1.6.0</version>
     <name>blas-email</name>
     <description>blas-email</description>
     <properties>
@@ -23,7 +23,7 @@
         <dependency>
             <groupId>com.blas</groupId>
             <artifactId>blas-common</artifactId>
-            <version>1.23.0</version>
+            <version>1.27.0</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
