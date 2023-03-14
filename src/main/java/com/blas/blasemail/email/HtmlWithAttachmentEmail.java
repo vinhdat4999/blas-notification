@@ -31,12 +31,16 @@ import javax.mail.internet.MimeMultipart;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Async
 @Component
 public class HtmlWithAttachmentEmail {
+
+  @Value("${blas.blas-idp.isSendEmailAlert}")
+  private boolean isSendEmailAlert;
 
   @Autowired
   private CentralizedLogService centralizedLogService;
@@ -72,7 +76,7 @@ public class HtmlWithAttachmentEmail {
       centralizedLogService.saveLog(BLAS_EMAIL.getServiceName(), ERROR, e.toString(),
           e.getCause() == null ? EMPTY : e.getCause().toString(),
           new JSONArray(List.of(emailConfigurationProperties)).toString(), null, null,
-          String.valueOf(new JSONArray(e.getStackTrace())));
+          String.valueOf(new JSONArray(e.getStackTrace())), isSendEmailAlert);
       e.printStackTrace();
     }
     htmlEmailWithAttachmentRequestPayloadList.forEach(htmlEmailWithAttachmentPayload -> {
@@ -100,14 +104,14 @@ public class HtmlWithAttachmentEmail {
             e.getCause() == null ? EMPTY : e.getCause().toString(),
             new JSONArray(List.of(emailConfigurationProperties)).toString(),
             new JSONObject(htmlEmailWithAttachmentPayload).toString(), null,
-            String.valueOf(new JSONArray(e.getStackTrace())));
+            String.valueOf(new JSONArray(e.getStackTrace())), isSendEmailAlert);
         e.printStackTrace();
       } catch (MessagingException e) {
         centralizedLogService.saveLog(BLAS_EMAIL.getServiceName(), ERROR, e.toString(),
             e.getCause() == null ? EMPTY : e.getCause().toString(),
             new JSONArray(List.of(emailConfigurationProperties)).toString(),
             new JSONObject(htmlEmailWithAttachmentPayload).toString(), null,
-            String.valueOf(new JSONArray(e.getStackTrace())));
+            String.valueOf(new JSONArray(e.getStackTrace())), isSendEmailAlert);
         e.printStackTrace();
         htmlEmailWithAttachmentRequestFailedList.add(htmlEmailWithAttachmentPayload);
       } catch (IOException e) {
@@ -115,7 +119,7 @@ public class HtmlWithAttachmentEmail {
             e.getCause() == null ? EMPTY : e.getCause().toString(),
             new JSONArray(List.of(emailConfigurationProperties)).toString(),
             new JSONObject(htmlEmailWithAttachmentPayload).toString(), null,
-            String.valueOf(new JSONArray(e.getStackTrace())));
+            String.valueOf(new JSONArray(e.getStackTrace())), isSendEmailAlert);
         e.printStackTrace();
       } finally {
         delete("temp/" + htmlEmailWithAttachmentPayload.getFileName());

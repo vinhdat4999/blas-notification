@@ -40,8 +40,8 @@ public class WebSecurityConfig {
       throws Exception {
     http.csrf().disable();
     http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
-//    http.authorizeRequests().anyRequest().permitAll();
-    http.authorizeRequests().anyRequest().authenticated();
+    http.authorizeRequests().anyRequest().permitAll();
+//    http.authorizeRequests().anyRequest().authenticated();
     return http.build();
   }
 

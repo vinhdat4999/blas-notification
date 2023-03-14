@@ -1,7 +1,7 @@
 package com.blas.blasemail.controller;
 
-import static com.blas.blascommon.utils.StringUtils.isBlank;
 import static com.blas.blascommon.utils.ValidUtils.isValidEmail;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.blas.blascommon.exceptions.types.BadRequestException;
 import com.blas.blascommon.payload.HtmlEmailRequest;

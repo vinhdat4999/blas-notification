@@ -11,6 +11,11 @@ spring:
       ddl-auto: none
     show-sql: 'true'
 blas:
+  blas-idp:
+    isSendEmailAlert: true
+    jwt:
+      secret: ZPYu33tz8QYU3hwJQXgHpZsKfYn0r2poopBx7x1n3rmeIvuGU4wf65kk6rV1DrN
+      timeToExpired: 8640000 #100 days
   blas-email:
     emailSender: blasvietnam@gmail.com
     password: pdaifcxvnvsqyums

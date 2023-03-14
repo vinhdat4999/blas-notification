@@ -26,12 +26,16 @@ import javax.mail.internet.MimeMultipart;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
 @Async
 public class HtmlEmail {
+
+  @Value("${blas.blas-idp.isSendEmailAlert}")
+  private boolean isSendEmailAlert;
 
   @Autowired
   private CentralizedLogService centralizedLogService;
@@ -63,7 +67,7 @@ public class HtmlEmail {
       centralizedLogService.saveLog(BLAS_EMAIL.getServiceName(), ERROR, e.toString(),
           e.getCause() == null ? EMPTY : e.getCause().toString(),
           new JSONArray(List.of(emailConfigurationProperties)).toString(), null, null,
-          String.valueOf(new JSONArray(e.getStackTrace())));
+          String.valueOf(new JSONArray(e.getStackTrace())), isSendEmailAlert);
       e.printStackTrace();
     }
     MimeBodyPart messageBodyPartContent = new MimeBodyPart();
@@ -86,14 +90,14 @@ public class HtmlEmail {
             e.getCause() == null ? EMPTY : e.getCause().toString(),
             new JSONArray(List.of(emailConfigurationProperties)).toString(),
             new JSONObject(htmlEmailPayload).toString(), null,
-            String.valueOf(new JSONArray(e.getStackTrace())));
+            String.valueOf(new JSONArray(e.getStackTrace())), isSendEmailAlert);
         e.printStackTrace();
       } catch (MessagingException e) {
         centralizedLogService.saveLog(BLAS_EMAIL.getServiceName(), ERROR, e.toString(),
             e.getCause() == null ? EMPTY : e.getCause().toString(),
             new JSONArray(List.of(emailConfigurationProperties)).toString(),
             new JSONObject(htmlEmailPayload).toString(), null,
-            String.valueOf(new JSONArray(e.getStackTrace())));
+            String.valueOf(new JSONArray(e.getStackTrace())), isSendEmailAlert);
         e.printStackTrace();
         htmlEmailRequestFailedList.add(htmlEmailPayload);
       }
