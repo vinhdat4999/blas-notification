@@ -11,6 +11,7 @@ import com.blas.blascommon.payload.HtmlEmailWithAttachmentResponse;
 import com.blas.blasemail.email.HtmlEmail;
 import com.blas.blasemail.email.HtmlWithAttachmentEmail;
 import java.util.List;
+import javax.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,7 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class SendEmailController {
 
   private static final String EMAILS_INVALID = "All email unsent. These email is invalid: ";
-  private static final String CONTAIN_NO_NAME_FILE = "Have 1 or more emails containing unnamed files. Please double check.";
 
   @Autowired
   private HtmlEmail htmlEmail;
@@ -33,8 +33,8 @@ public class SendEmailController {
 
   @PostMapping(value = "/html")
   public ResponseEntity<HtmlEmailResponse> sendHtmlEmailHandler(
-      @RequestBody List<HtmlEmailRequest> htmlEmailPayloadList) {
-    StringBuilder invalidEmails = new StringBuilder("");
+      @RequestBody List<HtmlEmailRequest> htmlEmailPayloadList) throws MessagingException {
+    StringBuilder invalidEmails = new StringBuilder();
     htmlEmailPayloadList.forEach(htmlEmailPayload -> {
       if (!isValidEmail(htmlEmailPayload.getEmailTo())) {
         invalidEmails.append(htmlEmailPayload.getEmailTo()).append(", ");
@@ -49,14 +49,12 @@ public class SendEmailController {
 
   @PostMapping(value = "/html-with-attachment")
   public ResponseEntity<HtmlEmailWithAttachmentResponse> sendHtmlWithFilesEmailHandler(
-      @RequestBody List<HtmlEmailWithAttachmentRequest> htmlEmailWithAttachmentRequestPayloadList) {
-    StringBuilder invalidEmails = new StringBuilder("");
+      @RequestBody List<HtmlEmailWithAttachmentRequest> htmlEmailWithAttachmentRequestPayloadList)
+      throws MessagingException {
+    StringBuilder invalidEmails = new StringBuilder();
     htmlEmailWithAttachmentRequestPayloadList.forEach(htmlEmailWithAttachmentPayload -> {
       if (!isValidEmail(htmlEmailWithAttachmentPayload.getEmailTo())) {
         invalidEmails.append(htmlEmailWithAttachmentPayload.getEmailTo()).append(", ");
-      }
-      if (isBlank(htmlEmailWithAttachmentPayload.getFileName())) {
-        throw new BadRequestException(CONTAIN_NO_NAME_FILE);
       }
     });
     if (!isBlank(invalidEmails.toString())) {
