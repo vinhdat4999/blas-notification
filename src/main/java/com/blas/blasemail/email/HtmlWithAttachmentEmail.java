@@ -6,60 +6,37 @@ import static com.blas.blascommon.security.SecurityUtils.base64Decode;
 import static com.blas.blascommon.utils.fileutils.FileUtils.delete;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
-import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.payload.HtmlEmailWithAttachmentRequest;
 import com.blas.blascommon.payload.HtmlEmailWithAttachmentResponse;
-import com.blas.blascommon.properties.EmailConfigurationProperties;
 import com.blas.blascommon.utils.fileutils.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.mail.Message;
+import javax.mail.Authenticator;
+import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
-import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import org.json.JSONArray;
-import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Async
 @Component
-public class HtmlWithAttachmentEmail {
-
-  @Value("${blas.blas-idp.isSendEmailAlert}")
-  private boolean isSendEmailAlert;
-
-  @Autowired
-  private CentralizedLogService centralizedLogService;
-
-  @Autowired
-  private EmailConfigurationProperties emailConfigurationProperties;
+public class HtmlWithAttachmentEmail extends Email {
 
   public HtmlEmailWithAttachmentResponse sendEmail(
       List<HtmlEmailWithAttachmentRequest> htmlEmailWithAttachmentRequestPayloadList) {
-    Properties props = new Properties();
-    props.put("mail.smtp.host", "smtp.gmail.com");
-    props.put("mail.smtp.port", emailConfigurationProperties.getPortSender());
-    props.put("mail.smtp.auth", "true");
-    props.put("mail.smtp.starttls.enable", "true");
-    props.put("mail.smtp.starttls.required", "true");
-    props.put("mail.smtp.ssl.protocols", "TLSv1.2");
-    props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-
-    Session session = Session.getDefaultInstance(props, new javax.mail.Authenticator() {
+    final String TEMP_ELM_PATH = "temp/";
+    Session session = Session.getDefaultInstance(buildEmailProperties(), new Authenticator() {
       @Override
       protected PasswordAuthentication getPasswordAuthentication() {
         return new PasswordAuthentication(emailConfigurationProperties.getEmailSender(),
@@ -81,7 +58,7 @@ public class HtmlWithAttachmentEmail {
     }
     htmlEmailWithAttachmentRequestPayloadList.forEach(htmlEmailWithAttachmentPayload -> {
       try {
-        message.addRecipient(Message.RecipientType.TO,
+        message.addRecipient(RecipientType.TO,
             new InternetAddress(htmlEmailWithAttachmentPayload.getEmailTo()));
         message.setSubject(htmlEmailWithAttachmentPayload.getTitle(), "utf8");
 
@@ -92,37 +69,18 @@ public class HtmlWithAttachmentEmail {
         multipart.addBodyPart(messageBodyPartContent);
         byte[] fileContent = base64Decode(htmlEmailWithAttachmentPayload.getBase64FileContent());
         FileUtils.writeByteArrayToFile(fileContent,
-            "temp/" + htmlEmailWithAttachmentPayload.getFileName());
+            TEMP_ELM_PATH + htmlEmailWithAttachmentPayload.getFileName());
         MimeBodyPart attachmentPart = new MimeBodyPart();
-        attachmentPart.attachFile(new File("temp/" + htmlEmailWithAttachmentPayload.getFileName()));
+        attachmentPart.attachFile(
+            new File(TEMP_ELM_PATH + htmlEmailWithAttachmentPayload.getFileName()));
         multipart.addBodyPart(attachmentPart);
         message.setContent(multipart);
         Transport.send(message);
         sentEmailNum.getAndIncrement();
-      } catch (AddressException e) {
-        centralizedLogService.saveLog(BLAS_EMAIL.getServiceName(), ERROR, e.toString(),
-            e.getCause() == null ? EMPTY : e.getCause().toString(),
-            new JSONArray(List.of(emailConfigurationProperties)).toString(),
-            new JSONObject(htmlEmailWithAttachmentPayload).toString(), null,
-            String.valueOf(new JSONArray(e.getStackTrace())), isSendEmailAlert);
-        e.printStackTrace();
-      } catch (MessagingException e) {
-        centralizedLogService.saveLog(BLAS_EMAIL.getServiceName(), ERROR, e.toString(),
-            e.getCause() == null ? EMPTY : e.getCause().toString(),
-            new JSONArray(List.of(emailConfigurationProperties)).toString(),
-            new JSONObject(htmlEmailWithAttachmentPayload).toString(), null,
-            String.valueOf(new JSONArray(e.getStackTrace())), isSendEmailAlert);
-        e.printStackTrace();
-        htmlEmailWithAttachmentRequestFailedList.add(htmlEmailWithAttachmentPayload);
-      } catch (IOException e) {
-        centralizedLogService.saveLog(BLAS_EMAIL.getServiceName(), ERROR, e.toString(),
-            e.getCause() == null ? EMPTY : e.getCause().toString(),
-            new JSONArray(List.of(emailConfigurationProperties)).toString(),
-            new JSONObject(htmlEmailWithAttachmentPayload).toString(), null,
-            String.valueOf(new JSONArray(e.getStackTrace())), isSendEmailAlert);
-        e.printStackTrace();
+      } catch (MessagingException | IOException e) {
+        saveCentralizeLog(e, htmlEmailWithAttachmentPayload);
       } finally {
-        delete("temp/" + htmlEmailWithAttachmentPayload.getFileName());
+        delete(TEMP_ELM_PATH + htmlEmailWithAttachmentPayload.getFileName());
       }
     });
     HtmlEmailWithAttachmentResponse htmlEmailWithAttachmentResponse = new HtmlEmailWithAttachmentResponse();

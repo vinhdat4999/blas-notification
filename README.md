@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                            |
 |---------|--------------|------------------------------------------|
+| 1.7.0   | 16/03/2023   | Uptake blas-common 1.28.0                |
 | 1.6.0   | 15/03/2023   | Uptake blas-common 1.27.0                |
 | 1.5.0   | 10/11/2022   | Apply Centralized Logger                 |
 | 1.4.0   | 23/10/2022   | Bump version common to update send email |
