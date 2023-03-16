@@ -10,13 +10,33 @@ spring:
     hibernate:
       ddl-auto: none
     show-sql: 'true'
+  thymeleaf:
+    enabled: true
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML5
+    encoding: UTF-8
+    cache: false
+  mail:
+    host: smtp.gmail.com
+    port: 465
+    username: blasvietnam@gmail.com
+    password: pdaifcxvnvsqyums
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            protocols: TLSv1.2
+            checkserveridentity: true
+          socketFactory:
+            class: javax.net.ssl.SSLSocketFactory
 blas:
   blas-idp:
     isSendEmailAlert: true
-  blas-email:
-    emailSender: blasvietnam@gmail.com
-    password: pdaifcxvnvsqyums
-    portSender: 465
 #logging:
 #  file:
 #    name: application.log

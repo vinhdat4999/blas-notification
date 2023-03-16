@@ -5,14 +5,16 @@ import static com.blas.blascommon.enums.LogType.ERROR;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import com.blas.blascommon.core.service.CentralizedLogService;
-import com.blas.blascommon.payload.HtmlEmailWithAttachmentRequest;
-import com.blas.blascommon.properties.EmailConfigurationProperties;
-import java.util.List;
-import java.util.Properties;
+import java.util.Map;
+import java.util.Map.Entry;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.mail.MailProperties;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
 public class Email {
 
@@ -23,28 +25,27 @@ public class Email {
   protected CentralizedLogService centralizedLogService;
 
   @Autowired
-  protected EmailConfigurationProperties emailConfigurationProperties;
+  protected TemplateEngine templateEngine;
 
-  protected void saveCentralizeLog(Exception e,
-      HtmlEmailWithAttachmentRequest htmlEmailWithAttachmentPayload) {
+  @Autowired
+  protected JavaMailSender javaMailSender;
+
+  @Autowired
+  protected MailProperties mailProperties;
+
+  protected void saveCentralizeLog(Exception e, Object object) {
     centralizedLogService.saveLog(BLAS_EMAIL.getServiceName(), ERROR, e.toString(),
         e.getCause() == null ? EMPTY : e.getCause().toString(),
-        new JSONArray(List.of(emailConfigurationProperties)).toString(),
-        new JSONObject(htmlEmailWithAttachmentPayload).toString(), null,
-        String.valueOf(new JSONArray(e.getStackTrace())), isSendEmailAlert);
+        new JSONObject(javaMailSender).toString(), new JSONObject(object).toString(),
+        new JSONObject(mailProperties).toString(), String.valueOf(new JSONArray(e.getStackTrace())),
+        isSendEmailAlert);
   }
 
-  protected Properties buildEmailProperties() {
-    Properties props = new Properties();
-    props.put("mail.smtp.host", "smtp.gmail.com");
-    props.put("mail.smtp.port", emailConfigurationProperties.getPortSender());
-    props.put("mail.smtp.auth", "true");
-    props.put("mail.smtp.starttls.enable", "true");
-    props.put("mail.smtp.starttls.required", "true");
-    props.put("mail.smtp.ssl.protocols", "TLSv1.2");
-    props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-    props.put("mail.smtp.ssl.checkserveridentity", "true");
-    return props;
+  protected String generateHtmlContent(String emailTemplateName, Map<String, String> data) {
+    Context context = new Context();
+    for (Entry<String, String> entry : data.entrySet()) {
+      context.setVariable(entry.getKey(), entry.getValue());
+    }
+    return templateEngine.process(emailTemplateName, context);
   }
-
 }
