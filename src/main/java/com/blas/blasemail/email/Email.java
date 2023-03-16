@@ -42,10 +42,14 @@ public class Email {
   }
 
   protected String generateHtmlContent(String emailTemplateName, Map<String, String> data) {
-    Context context = new Context();
-    for (Entry<String, String> entry : data.entrySet()) {
-      context.setVariable(entry.getKey(), entry.getValue());
+    try {
+      Context context = new Context();
+      for (Entry<String, String> entry : data.entrySet()) {
+        context.setVariable(entry.getKey(), entry.getValue());
+      }
+      return templateEngine.process(emailTemplateName, context);
+    } catch (Exception e) {
+      return EMPTY;
     }
-    return templateEngine.process(emailTemplateName, context);
   }
 }
