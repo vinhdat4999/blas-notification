@@ -2,14 +2,15 @@ package com.blas.blasemail.email;
 
 import static com.blas.blascommon.security.SecurityUtils.base64Decode;
 import static com.blas.blascommon.utils.IdUtils.genUUID;
+import static com.blas.blascommon.utils.TemplateUtils.generateHtmlContent;
 import static com.blas.blascommon.utils.fileutils.FileUtils.delete;
 import static com.blas.blascommon.utils.fileutils.FileUtils.writeByteArrayToFile;
 
 import com.blas.blascommon.payload.HtmlEmailWithAttachmentRequest;
-import com.blas.blascommon.payload.HtmlEmailWithAttachmentResponse;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.activation.FileDataSource;
@@ -20,6 +21,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -28,55 +30,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class HtmlWithAttachmentEmail extends Email {
 
-  public HtmlEmailWithAttachmentResponse sendEmail(
-      List<HtmlEmailWithAttachmentRequest> htmlEmailWithAttachmentRequestPayloadList)
-      throws MessagingException {
-    final String TEMP_ELM_PATH = "temp/";
-    MimeMessage mail = javaMailSender.createMimeMessage();
-    MimeMessageHelper helper = new MimeMessageHelper(mail, true);
-    helper.setFrom(new InternetAddress(mailProperties.getUsername()));
-    AtomicInteger sentEmailNum = new AtomicInteger();
-    List<HtmlEmailWithAttachmentRequest> htmlEmailWithAttachmentRequestFailedList = new ArrayList<>();
-    List<String> tempFileList = new ArrayList<>();
-    htmlEmailWithAttachmentRequestPayloadList.forEach(htmlEmailWithAttachmentPayload -> {
-      try {
-        helper.setTo(htmlEmailWithAttachmentPayload.getEmailTo());
-        helper.setSubject(htmlEmailWithAttachmentPayload.getTitle());
-        MimeBodyPart messageBodyPartContent = new MimeBodyPart();
-        messageBodyPartContent.setContent(
-            generateHtmlContent(htmlEmailWithAttachmentPayload.getEmailTemplateName(),
-                htmlEmailWithAttachmentPayload.getData()), "text/html; charset=utf-8");
-        Multipart multipart = new MimeMultipart();
-        multipart.addBodyPart(messageBodyPartContent);
-        htmlEmailWithAttachmentPayload.getFileList().forEach(fileAttach -> {
-          byte[] fileContent = base64Decode(fileAttach.getSecond());
-          String tempFileName = genUUID();
-          writeByteArrayToFile(fileContent, TEMP_ELM_PATH + tempFileName);
-          tempFileList.add(tempFileName);
-          try {
-            addAttachment(multipart, fileAttach.getFirst(), TEMP_ELM_PATH + tempFileName);
-          } catch (MessagingException e) {
-            saveCentralizeLog(e, htmlEmailWithAttachmentPayload);
-            htmlEmailWithAttachmentRequestFailedList.add(htmlEmailWithAttachmentPayload);
-          }
-        });
-        mail.setContent(multipart);
-        javaMailSender.send(mail);
-        sentEmailNum.getAndIncrement();
-      } catch (MessagingException e) {
-        saveCentralizeLog(e, htmlEmailWithAttachmentPayload);
-        htmlEmailWithAttachmentRequestFailedList.add(htmlEmailWithAttachmentPayload);
-      } finally {
-        tempFileList.forEach(tempFile -> delete(TEMP_ELM_PATH + tempFile));
-      }
-    });
-    HtmlEmailWithAttachmentResponse htmlEmailWithAttachmentResponse = new HtmlEmailWithAttachmentResponse();
-    htmlEmailWithAttachmentResponse.setSentEmailNum(sentEmailNum.get());
-    htmlEmailWithAttachmentResponse.setHtmlEmailWithAttachmentRequestFailedList(
-        htmlEmailWithAttachmentRequestFailedList);
-    return htmlEmailWithAttachmentResponse;
-  }
-
   private static void addAttachment(Multipart multipart, String filename, String filePath)
       throws MessagingException {
     DataSource source = new FileDataSource(filePath);
@@ -84,5 +37,52 @@ public class HtmlWithAttachmentEmail extends Email {
     messageBodyPart.setDataHandler(new DataHandler(source));
     messageBodyPart.setFileName(filename);
     multipart.addBodyPart(messageBodyPart);
+  }
+
+  public void sendEmail(HtmlEmailWithAttachmentRequest htmlEmailWithAttachmentRequest,
+      List<HtmlEmailWithAttachmentRequest> sentEmailList,
+      List<HtmlEmailWithAttachmentRequest> failedEmailList, CountDownLatch latch) {
+    final String TEMP_ELM_PATH = "temp/";
+    AtomicBoolean isAddAttachFileCompletely = new AtomicBoolean(true);
+    new Thread(() -> {
+      List<String> tempFileList = new ArrayList<>();
+      MimeMessage message = javaMailSender.createMimeMessage();
+      try {
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        helper.setFrom(new InternetAddress(mailProperties.getUsername()));
+        helper.setTo(htmlEmailWithAttachmentRequest.getEmailTo());
+        helper.setSubject(htmlEmailWithAttachmentRequest.getTitle());
+        MimeBodyPart messageBodyPartContent = new MimeBodyPart();
+        messageBodyPartContent.setContent(generateHtmlContent(templateEngine,
+            htmlEmailWithAttachmentRequest.getEmailTemplateName(),
+            htmlEmailWithAttachmentRequest.getData()), "text/html; charset=utf-8");
+        Multipart multipart = new MimeMultipart();
+        multipart.addBodyPart(messageBodyPartContent);
+        htmlEmailWithAttachmentRequest.getFileList().forEach(fileAttach -> {
+          byte[] fileContent = base64Decode(fileAttach.getSecond());
+          String tempFileName = genUUID();
+          writeByteArrayToFile(fileContent, TEMP_ELM_PATH + tempFileName);
+          tempFileList.add(tempFileName);
+          try {
+            addAttachment(multipart, fileAttach.getFirst(), TEMP_ELM_PATH + tempFileName);
+          } catch (MessagingException e) {
+            isAddAttachFileCompletely.set(false);
+            saveCentralizeLog(e, htmlEmailWithAttachmentRequest);
+          }
+        });
+        if (!isAddAttachFileCompletely.get()) {
+          throw new MessagingException();
+        }
+        message.setContent(multipart);
+        javaMailSender.send(message);
+        sentEmailList.add(htmlEmailWithAttachmentRequest);
+      } catch (MailException | MessagingException e) {
+        saveCentralizeLog(e, htmlEmailWithAttachmentRequest);
+        failedEmailList.add(htmlEmailWithAttachmentRequest);
+      } finally {
+        tempFileList.forEach(tempFile -> delete(TEMP_ELM_PATH + tempFile));
+        latch.countDown();
+      }
+    }).start();
   }
 }

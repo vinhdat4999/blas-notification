@@ -5,17 +5,16 @@ import static com.blas.blascommon.enums.LogType.ERROR;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import com.blas.blascommon.core.service.CentralizedLogService;
-import java.util.Map;
-import java.util.Map.Entry;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.mail.MailProperties;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.stereotype.Component;
 import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.Context;
 
+@Component
 public class Email {
 
   @Value("${blas.blas-idp.isSendEmailAlert}")
@@ -39,17 +38,5 @@ public class Email {
         new JSONObject(javaMailSender).toString(), new JSONObject(object).toString(),
         new JSONObject(mailProperties).toString(), String.valueOf(new JSONArray(e.getStackTrace())),
         isSendEmailAlert);
-  }
-
-  protected String generateHtmlContent(String emailTemplateName, Map<String, String> data) {
-    try {
-      Context context = new Context();
-      for (Entry<String, String> entry : data.entrySet()) {
-        context.setVariable(entry.getKey(), entry.getValue());
-      }
-      return templateEngine.process(emailTemplateName, context);
-    } catch (Exception e) {
-      return EMPTY;
-    }
   }
 }

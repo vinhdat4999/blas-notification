@@ -2,14 +2,14 @@ server:
   port: 8082
 spring:
   datasource:
-    driver-class-name: com.mysql.jdbc.Driver
+    driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/blas
     username: root
     password:
   jpa:
     hibernate:
       ddl-auto: none
-    show-sql: 'true'
+    show-sql: true
   thymeleaf:
     enabled: true
     prefix: classpath:/templates/
@@ -37,6 +37,8 @@ spring:
 blas:
   blas-idp:
     isSendEmailAlert: true
+    jwt:
+      secret: ZPYu33tz8QYU3hwJQXgHpZsKfYn0r2poopBx7x1n3rmeIvuGU4wf65kk6rV1DrN
 #logging:
 #  file:
 #    name: application.log

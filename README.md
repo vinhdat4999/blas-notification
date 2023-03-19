@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                            |
 |---------|--------------|------------------------------------------|
+| 2.0.0   | 19/03/2023   | Support monitoring blas-email            |
 | 1.8.0   | 17/03/2023   | Support email template                   |
 | 1.7.0   | 16/03/2023   | Uptake blas-common 1.28.0                |
 | 1.6.0   | 15/03/2023   | Uptake blas-common 1.27.0                |
