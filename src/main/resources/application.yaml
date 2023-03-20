@@ -35,6 +35,8 @@ spring:
           socketFactory:
             class: javax.net.ssl.SSLSocketFactory
 blas:
+  blas-email:
+    dailyQuotaNormalUser: 10
   blas-idp:
     isSendEmailAlert: true
     jwt:
