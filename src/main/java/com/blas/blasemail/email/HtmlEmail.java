@@ -2,6 +2,7 @@ package com.blas.blasemail.email;
 
 import static com.blas.blascommon.utils.TemplateUtils.generateHtmlContent;
 
+import com.blas.blascommon.payload.EmailRequest;
 import com.blas.blascommon.payload.HtmlEmailRequest;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -16,9 +17,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class HtmlEmail extends Email {
 
-  public void sendEmail(HtmlEmailRequest htmlEmailRequest, List<HtmlEmailRequest> sentEmailList,
-      List<HtmlEmailRequest> failedEmailList, CountDownLatch latch) {
+  public void sendEmail(HtmlEmailRequest htmlEmailRequest, List<EmailRequest> sentEmailList,
+      List<EmailRequest> failedEmailList, CountDownLatch latch) {
     new Thread(() -> {
+      if (isInvalidReceiverEmail(htmlEmailRequest, failedEmailList, latch)) {
+        return;
+      }
       MimeMessage message = javaMailSender.createMimeMessage();
       MimeMessageHelper helper = new MimeMessageHelper(message);
       try {
@@ -30,6 +34,7 @@ public class HtmlEmail extends Email {
         javaMailSender.send(message);
         sentEmailList.add(htmlEmailRequest);
       } catch (MailException | MessagingException e) {
+        htmlEmailRequest.setReasonSendFailed(INTERNAL_SYSTEM_MSG);
         saveCentralizeLog(e, htmlEmailRequest);
         failedEmailList.add(htmlEmailRequest);
       } finally {

@@ -2,9 +2,14 @@ package com.blas.blasemail.email;
 
 import static com.blas.blascommon.enums.BlasService.BLAS_EMAIL;
 import static com.blas.blascommon.enums.LogType.ERROR;
+import static com.blas.blascommon.utils.ValidUtils.isValidEmail;
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import com.blas.blascommon.core.service.CentralizedLogService;
+import com.blas.blascommon.payload.EmailRequest;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +21,10 @@ import org.thymeleaf.TemplateEngine;
 
 @Component
 public class Email {
+
+  protected static final String INVALID_EMAIL_MSG = "Invalid receiver email: %s";
+
+  public static final String INTERNAL_SYSTEM_MSG = "Blas Email internal error";
 
   @Value("${blas.blas-idp.isSendEmailAlert}")
   protected boolean isSendEmailAlert;
@@ -38,5 +47,16 @@ public class Email {
         new JSONObject(javaMailSender).toString(), new JSONObject(object).toString(),
         new JSONObject(mailProperties).toString(), String.valueOf(new JSONArray(e.getStackTrace())),
         isSendEmailAlert);
+  }
+
+  protected boolean isInvalidReceiverEmail(EmailRequest emailRequest,
+      List<EmailRequest> failedEmailList, CountDownLatch latch) {
+    if (isValidEmail(emailRequest.getEmailTo())) {
+      return false;
+    }
+    emailRequest.setReasonSendFailed(format(INVALID_EMAIL_MSG, emailRequest.getEmailTo()));
+    failedEmailList.add(emailRequest);
+    latch.countDown();
+    return true;
   }
 }

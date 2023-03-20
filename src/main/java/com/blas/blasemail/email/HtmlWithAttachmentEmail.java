@@ -5,7 +5,9 @@ import static com.blas.blascommon.utils.IdUtils.genUUID;
 import static com.blas.blascommon.utils.TemplateUtils.generateHtmlContent;
 import static com.blas.blascommon.utils.fileutils.FileUtils.delete;
 import static com.blas.blascommon.utils.fileutils.FileUtils.writeByteArrayToFile;
+import static java.lang.String.format;
 
+import com.blas.blascommon.payload.EmailRequest;
 import com.blas.blascommon.payload.HtmlEmailWithAttachmentRequest;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +32,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class HtmlWithAttachmentEmail extends Email {
 
+  private static final String ADD_ATTACHMENT_FAILED_MSG = "Failed to add file attachment: %s";
+
   private static void addAttachment(Multipart multipart, String filename, String filePath)
       throws MessagingException {
     DataSource source = new FileDataSource(filePath);
@@ -40,11 +44,13 @@ public class HtmlWithAttachmentEmail extends Email {
   }
 
   public void sendEmail(HtmlEmailWithAttachmentRequest htmlEmailWithAttachmentRequest,
-      List<HtmlEmailWithAttachmentRequest> sentEmailList,
-      List<HtmlEmailWithAttachmentRequest> failedEmailList, CountDownLatch latch) {
+      List<EmailRequest> sentEmailList, List<EmailRequest> failedEmailList, CountDownLatch latch) {
     final String TEMP_ELM_PATH = "temp/";
     AtomicBoolean isAddAttachFileCompletely = new AtomicBoolean(true);
     new Thread(() -> {
+      if (isInvalidReceiverEmail(htmlEmailWithAttachmentRequest, failedEmailList, latch)) {
+        return;
+      }
       List<String> tempFileList = new ArrayList<>();
       MimeMessage message = javaMailSender.createMimeMessage();
       try {
@@ -67,6 +73,8 @@ public class HtmlWithAttachmentEmail extends Email {
             addAttachment(multipart, fileAttach.getFirst(), TEMP_ELM_PATH + tempFileName);
           } catch (MessagingException e) {
             isAddAttachFileCompletely.set(false);
+            htmlEmailWithAttachmentRequest.setReasonSendFailed(
+                format(ADD_ATTACHMENT_FAILED_MSG, fileAttach.getFirst()));
             saveCentralizeLog(e, htmlEmailWithAttachmentRequest);
           }
         });
@@ -77,6 +85,7 @@ public class HtmlWithAttachmentEmail extends Email {
         javaMailSender.send(message);
         sentEmailList.add(htmlEmailWithAttachmentRequest);
       } catch (MailException | MessagingException e) {
+        htmlEmailWithAttachmentRequest.setReasonSendFailed(INTERNAL_SYSTEM_MSG);
         saveCentralizeLog(e, htmlEmailWithAttachmentRequest);
         failedEmailList.add(htmlEmailWithAttachmentRequest);
       } finally {
