@@ -45,28 +45,21 @@ public class SendEmailController {
 
   @Value("${blas.blas-idp.isSendEmailAlert}")
   protected boolean isSendEmailAlert;
-
-  @Value("${blas.blas-email.dailyQuotaNormalUser}")
-  private int dailyQuotaNormalUser;
-
-  @Autowired
-  private HtmlEmail htmlEmail;
-
-  @Autowired
-  private HtmlWithAttachmentEmail htmlWithAttachmentEmail;
-
-  @Autowired
-  private EmailLogService emailLogService;
-
-  @Autowired
-  private AuthUserService authUserService;
-
   @Autowired
   protected CentralizedLogService centralizedLogService;
-
-  private CountDownLatch latch;
   List<EmailRequest> sentEmailList;
   List<EmailRequest> failedEmailList;
+  @Value("${blas.blas-email.dailyQuotaNormalUser}")
+  private int dailyQuotaNormalUser;
+  @Autowired
+  private HtmlEmail htmlEmail;
+  @Autowired
+  private HtmlWithAttachmentEmail htmlWithAttachmentEmail;
+  @Autowired
+  private EmailLogService emailLogService;
+  @Autowired
+  private AuthUserService authUserService;
+  private CountDownLatch latch;
 
   @PostMapping(value = "/html")
   public ResponseEntity<HtmlEmailResponse> sendHtmlEmailHandler(

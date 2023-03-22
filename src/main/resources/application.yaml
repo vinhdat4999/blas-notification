@@ -37,6 +37,9 @@ spring:
 blas:
   blas-email:
     dailyQuotaNormalUser: 10
+    numberTryToSendEmailAgain: 4
+    waitTimeFirstTryToSendEmailAgain: 1000 #miliseconds
+    needMaskFields: password
   blas-idp:
     isSendEmailAlert: true
     jwt:
