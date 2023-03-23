@@ -55,10 +55,10 @@ public class Email {
   protected void saveCentralizeLog(Exception e, Object object) {
     centralizedLogService.saveLog(BLAS_EMAIL.getServiceName(), ERROR, e.toString(),
         e.getCause() == null ? EMPTY : e.getCause().toString(),
-        maskJsonObjectWithFields(new JSONObject(javaMailSender), needFieldMasks)
-            .toString(), new JSONObject(object).toString(),
-        maskJsonObjectWithFields(new JSONObject(mailProperties), needFieldMasks)
-            .toString(), String.valueOf(new JSONArray(e.getStackTrace())), isSendEmailAlert);
+        maskJsonObjectWithFields(new JSONObject(javaMailSender), needFieldMasks).toString(),
+        new JSONObject(object).toString(),
+        maskJsonObjectWithFields(new JSONObject(mailProperties), needFieldMasks).toString(),
+        new JSONArray(e.getStackTrace()).toString(), isSendEmailAlert);
   }
 
   protected boolean isInvalidReceiverEmail(EmailRequest emailRequest,
