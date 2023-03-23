@@ -33,10 +33,8 @@ public class HtmlEmail extends Email {
         helper.setText(htmlContent, true);
         javaMailSender.send(message);
         sentEmailList.add(htmlEmailRequest);
-      } catch (MailException | MessagingException e) {
-        htmlEmailRequest.setReasonSendFailed(INTERNAL_SYSTEM_MSG);
-        saveCentralizeLog(e, htmlEmailRequest);
-        failedEmailList.add(htmlEmailRequest);
+      } catch (MailException | MessagingException exception) {
+        trySendingEmail(htmlEmailRequest, message, sentEmailList, failedEmailList);
       } finally {
         latch.countDown();
       }

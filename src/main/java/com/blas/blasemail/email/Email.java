@@ -2,6 +2,7 @@ package com.blas.blasemail.email;
 
 import static com.blas.blascommon.enums.BlasService.BLAS_EMAIL;
 import static com.blas.blascommon.enums.LogType.ERROR;
+import static com.blas.blascommon.utils.JsonUtils.maskJsonObjectWithFields;
 import static com.blas.blascommon.utils.ValidUtils.isValidEmail;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -9,12 +10,15 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.payload.EmailRequest;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import javax.mail.internet.MimeMessage;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.mail.MailProperties;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.TemplateEngine;
@@ -22,12 +26,16 @@ import org.thymeleaf.TemplateEngine;
 @Component
 public class Email {
 
-  protected static final String INVALID_EMAIL_MSG = "Invalid receiver email: %s";
-
   public static final String INTERNAL_SYSTEM_MSG = "Blas Email internal error";
-
+  protected static final String INVALID_EMAIL_MSG = "Invalid receiver email: %s";
   @Value("${blas.blas-idp.isSendEmailAlert}")
   protected boolean isSendEmailAlert;
+
+  @Value("${blas.blas-email.numberTryToSendEmailAgain}")
+  protected int numberTryToSendEmailAgain;
+
+  @Value("${blas.blas-email.waitTimeFirstTryToSendEmailAgain}")
+  protected long waitTimeFirstTryToSendEmailAgain;
 
   @Autowired
   protected CentralizedLogService centralizedLogService;
@@ -41,12 +49,16 @@ public class Email {
   @Autowired
   protected MailProperties mailProperties;
 
+  @Autowired
+  private Set<String> needFieldMasks;
+
   protected void saveCentralizeLog(Exception e, Object object) {
     centralizedLogService.saveLog(BLAS_EMAIL.getServiceName(), ERROR, e.toString(),
         e.getCause() == null ? EMPTY : e.getCause().toString(),
-        new JSONObject(javaMailSender).toString(), new JSONObject(object).toString(),
-        new JSONObject(mailProperties).toString(), String.valueOf(new JSONArray(e.getStackTrace())),
-        isSendEmailAlert);
+        maskJsonObjectWithFields(new JSONObject(javaMailSender), needFieldMasks).toString(),
+        new JSONObject(object).toString(),
+        maskJsonObjectWithFields(new JSONObject(mailProperties), needFieldMasks).toString(),
+        new JSONArray(e.getStackTrace()).toString(), isSendEmailAlert);
   }
 
   protected boolean isInvalidReceiverEmail(EmailRequest emailRequest,
@@ -58,5 +70,27 @@ public class Email {
     failedEmailList.add(emailRequest);
     latch.countDown();
     return true;
+  }
+
+  protected void trySendingEmail(EmailRequest emailRequest, MimeMessage message,
+      List<EmailRequest> sentEmailList, List<EmailRequest> failedEmailList) {
+    int attempts = 1;
+    Exception exception = null;
+    while (attempts <= numberTryToSendEmailAgain) {
+      try {
+        long waitTime = (long) (waitTimeFirstTryToSendEmailAgain
+            + waitTimeFirstTryToSendEmailAgain * (attempts - 1) * 0.5);
+        Thread.sleep(waitTime);
+        javaMailSender.send(message);
+        sentEmailList.add(emailRequest);
+        return;
+      } catch (MailException | InterruptedException retryException) {
+        exception = retryException;
+        attempts++;
+      }
+    }
+    emailRequest.setReasonSendFailed(INTERNAL_SYSTEM_MSG);
+    saveCentralizeLog(exception, emailRequest);
+    failedEmailList.add(emailRequest);
   }
 }

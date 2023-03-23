@@ -2,6 +2,8 @@ package com.blas.blasemail.configuration;
 
 import com.blas.blascommon.jwt.JwtRequestFilter;
 import com.blas.blascommon.security.hash.Sha256Encoder;
+import com.blas.blasemail.properties.NeedMaskFieldProperties;
+import java.util.Set;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -52,5 +54,10 @@ public class WebSecurityConfig {
         registry.addMapping("/**").allowedMethods("*");
       }
     };
+  }
+
+  @Bean
+  public Set<String> needFieldMasks(NeedMaskFieldProperties needMaskFieldProperties) {
+    return Set.of(needMaskFieldProperties.getNeedMaskFields());
   }
 }
