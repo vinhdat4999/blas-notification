@@ -4,10 +4,10 @@ import static com.blas.blascommon.utils.TemplateUtils.generateHtmlContent;
 
 import com.blas.blascommon.payload.EmailRequest;
 import com.blas.blascommon.payload.HtmlEmailRequest;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;

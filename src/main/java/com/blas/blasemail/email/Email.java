@@ -9,15 +9,16 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.payload.EmailRequest;
+import jakarta.mail.internet.MimeMessage;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import javax.mail.internet.MimeMessage;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.mail.MailProperties;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
@@ -37,18 +38,23 @@ public class Email {
   @Value("${blas.blas-email.waitTimeFirstTryToSendEmailAgain}")
   protected long waitTimeFirstTryToSendEmailAgain;
 
+  @Lazy
   @Autowired
   protected CentralizedLogService centralizedLogService;
 
+  @Lazy
   @Autowired
   protected TemplateEngine templateEngine;
 
+  @Lazy
   @Autowired
   protected JavaMailSender javaMailSender;
 
+  @Lazy
   @Autowired
   protected MailProperties mailProperties;
 
+  @Lazy
   @Autowired
   private Set<String> needFieldMasks;
 

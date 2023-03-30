@@ -29,6 +29,7 @@ import java.util.concurrent.CountDownLatch;
 import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,20 +46,34 @@ public class SendEmailController {
 
   @Value("${blas.blas-idp.isSendEmailAlert}")
   protected boolean isSendEmailAlert;
+
+  @Lazy
   @Autowired
   protected CentralizedLogService centralizedLogService;
+
   List<EmailRequest> sentEmailList;
+
   List<EmailRequest> failedEmailList;
+
   @Value("${blas.blas-email.dailyQuotaNormalUser}")
   private int dailyQuotaNormalUser;
+
+  @Lazy
   @Autowired
   private HtmlEmail htmlEmail;
+
+  @Lazy
   @Autowired
   private HtmlWithAttachmentEmail htmlWithAttachmentEmail;
+
+  @Lazy
   @Autowired
   private EmailLogService emailLogService;
+
+  @Lazy
   @Autowired
   private AuthUserService authUserService;
+
   private CountDownLatch latch;
 
   @PostMapping(value = "/html")
