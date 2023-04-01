@@ -2,12 +2,12 @@ package com.blas.blasemail.email;
 
 import static com.blas.blascommon.security.SecurityUtils.base64Decode;
 import static com.blas.blascommon.utils.IdUtils.genUUID;
-import static com.blas.blascommon.utils.TemplateUtils.generateHtmlContent;
 import static com.blas.blascommon.utils.fileutils.FileUtils.delete;
 import static com.blas.blascommon.utils.fileutils.FileUtils.writeByteArrayToFile;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
+import com.blas.blascommon.enums.EmailTemplate;
 import com.blas.blascommon.payload.EmailRequest;
 import com.blas.blascommon.payload.HtmlEmailWithAttachmentRequest;
 import jakarta.activation.DataHandler;
@@ -63,8 +63,8 @@ public class HtmlWithAttachmentEmail extends Email {
         helper.setTo(htmlEmailWithAttachmentRequest.getEmailTo());
         helper.setSubject(htmlEmailWithAttachmentRequest.getTitle());
         MimeBodyPart messageBodyPartContent = new MimeBodyPart();
-        messageBodyPartContent.setContent(generateHtmlContent(templateEngine,
-            htmlEmailWithAttachmentRequest.getEmailTemplateName(),
+        messageBodyPartContent.setContent(templateUtils.generateHtmlContent(
+            EmailTemplate.valueOf(htmlEmailWithAttachmentRequest.getEmailTemplateName()),
             htmlEmailWithAttachmentRequest.getData()), "text/html; charset=utf-8");
         Multipart multipart = new MimeMultipart();
         multipart.addBodyPart(messageBodyPartContent);
@@ -79,8 +79,14 @@ public class HtmlWithAttachmentEmail extends Email {
       } catch (FileUploadException exception) {
         saveCentralizeLog(exception, htmlEmailWithAttachmentRequest);
         failedEmailList.add(htmlEmailWithAttachmentRequest);
-      } catch (MailException | MessagingException exception) {
+      } catch (MailException | MessagingException mailException) {
         trySendingEmail(htmlEmailWithAttachmentRequest, message, sentEmailList, failedEmailList);
+      } catch (IOException ioException) {
+        errorHandler(ioException, htmlEmailWithAttachmentRequest, failedEmailList,
+            INTERNAL_SYSTEM_MSG);
+      } catch (IllegalArgumentException illArgException) {
+        errorHandler(illArgException, htmlEmailWithAttachmentRequest, failedEmailList,
+            INVALID_EMAIL_TEMPLATE);
       } finally {
         deleteTempFileList(tempFileList);
         latch.countDown();

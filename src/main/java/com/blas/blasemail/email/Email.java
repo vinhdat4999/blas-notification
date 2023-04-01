@@ -9,6 +9,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.payload.EmailRequest;
+import com.blas.blascommon.utils.TemplateUtils;
 import jakarta.mail.internet.MimeMessage;
 import java.util.List;
 import java.util.Set;
@@ -22,13 +23,13 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
-import org.thymeleaf.TemplateEngine;
 
 @Component
 public class Email {
 
   public static final String INTERNAL_SYSTEM_MSG = "Blas Email internal error";
   protected static final String INVALID_EMAIL_MSG = "Invalid receiver email: %s";
+  protected static final String INVALID_EMAIL_TEMPLATE = "Email template not found";
   @Value("${blas.blas-idp.isSendEmailAlert}")
   protected boolean isSendEmailAlert;
 
@@ -44,15 +45,15 @@ public class Email {
 
   @Lazy
   @Autowired
-  protected TemplateEngine templateEngine;
-
-  @Lazy
-  @Autowired
   protected JavaMailSender javaMailSender;
 
   @Lazy
   @Autowired
   protected MailProperties mailProperties;
+
+  @Lazy
+  @Autowired
+  protected TemplateUtils templateUtils;
 
   @Lazy
   @Autowired
@@ -96,7 +97,15 @@ public class Email {
       }
     }
     emailRequest.setReasonSendFailed(INTERNAL_SYSTEM_MSG);
+    assert exception != null;
     saveCentralizeLog(exception, emailRequest);
+    failedEmailList.add(emailRequest);
+  }
+
+  protected void errorHandler(Exception exception, EmailRequest emailRequest,
+      List<EmailRequest> failedEmailList, String errorMessage) {
+    saveCentralizeLog(exception, emailRequest);
+    emailRequest.setReasonSendFailed(errorMessage);
     failedEmailList.add(emailRequest);
   }
 }

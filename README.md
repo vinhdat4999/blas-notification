@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                                      |
 |---------|--------------|----------------------------------------------------|
+| 2.4.0   | 02/04/2023   | Uptake blas-common v2.2.0                          |
 | 2.3.0   | 30/03/2023   | Upgrade Spring boot 3.0.5                          |
 | 2.2.0   | 23/03/2023   | Support try to resend email if failed in first try |
 | 2.1.0   | 20/03/2023   | Support handlers exception blas-email              |
