@@ -1,11 +1,11 @@
 package com.blas.blasemail.email;
 
-import static com.blas.blascommon.utils.TemplateUtils.generateHtmlContent;
-
+import com.blas.blascommon.enums.EmailTemplate;
 import com.blas.blascommon.payload.EmailRequest;
 import com.blas.blascommon.payload.HtmlEmailRequest;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import org.springframework.mail.MailException;
@@ -28,13 +28,18 @@ public class HtmlEmail extends Email {
       try {
         helper.setTo(htmlEmailRequest.getEmailTo());
         helper.setSubject(htmlEmailRequest.getTitle());
-        String htmlContent = generateHtmlContent(templateEngine,
-            htmlEmailRequest.getEmailTemplateName(), htmlEmailRequest.getData());
+        String htmlContent = templateUtils.generateHtmlContent(
+            EmailTemplate.valueOf(htmlEmailRequest.getEmailTemplateName()),
+            htmlEmailRequest.getData());
         helper.setText(htmlContent, true);
         javaMailSender.send(message);
         sentEmailList.add(htmlEmailRequest);
-      } catch (MailException | MessagingException exception) {
+      } catch (MailException | MessagingException mailException) {
         trySendingEmail(htmlEmailRequest, message, sentEmailList, failedEmailList);
+      } catch (IOException ioException) {
+        errorHandler(ioException, htmlEmailRequest, failedEmailList, INTERNAL_SYSTEM_MSG);
+      } catch (IllegalArgumentException illArgException) {
+        errorHandler(illArgException, htmlEmailRequest, failedEmailList, INVALID_EMAIL_TEMPLATE);
       } finally {
         latch.countDown();
       }
