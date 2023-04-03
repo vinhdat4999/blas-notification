@@ -28,6 +28,11 @@ spring:
           socketFactory:
             class: javax.net.ssl.SSLSocketFactory
 blas:
+  service:
+    serviceName: blas-email
+  gate-interceptor:
+    enableLogRequest: true
+    enableLogLocalRequest: true
   blas-email:
     dailyQuotaNormalUser: 10
     numberTryToSendEmailAgain: 4
