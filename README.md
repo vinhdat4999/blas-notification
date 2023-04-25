@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                                      |
 |---------|--------------|----------------------------------------------------|
+| 2.6.0   | 25/04/2023   | Uptake blas-common v2.6.0                          |
 | 2.5.0   | 03/04/2023   | Uptake blas-common v2.3.0                          |
 | 2.4.0   | 02/04/2023   | Uptake blas-common v2.2.0                          |
 | 2.3.0   | 30/03/2023   | Upgrade Spring boot 3.0.5                          |
