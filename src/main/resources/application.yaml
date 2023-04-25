@@ -28,11 +28,13 @@ spring:
           socketFactory:
             class: javax.net.ssl.SSLSocketFactory
 blas:
+  aliasBlasPrivateKey: blasSecretKey
+  certificate: BlasSecretKey.p12
   service:
     serviceName: blas-email
   gate-interceptor:
     enableLogRequest: true
-    enableLogLocalRequest: true
+    enableLogLocalRequest: false
   blas-email:
     dailyQuotaNormalUser: 10
     numberTryToSendEmailAgain: 4
@@ -41,7 +43,7 @@ blas:
   blas-idp:
     isSendEmailAlert: true
     jwt:
-      secret: ZPYu33tz8QYU3hwJQXgHpZsKfYn0r2poopBx7x1n3rmeIvuGU4wf65kk6rV1DrN
+      timeToExpiredInternalToken: 120 #2 minutes
 #logging:
 #  file:
 #    name: application.log
