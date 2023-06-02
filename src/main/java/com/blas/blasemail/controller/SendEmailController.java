@@ -1,6 +1,5 @@
 package com.blas.blasemail.controller;
 
-import static com.blas.blascommon.enums.BlasService.BLAS_EMAIL;
 import static com.blas.blascommon.enums.LogType.ERROR;
 import static com.blas.blascommon.security.SecurityUtils.getUserIdLoggedIn;
 import static com.blas.blascommon.security.SecurityUtils.getUsernameLoggedIn;
@@ -46,6 +45,9 @@ public class SendEmailController {
 
   @Value("${blas.blas-idp.isSendEmailAlert}")
   protected boolean isSendEmailAlert;
+
+  @Value("${blas.service.serviceName}")
+  private String serviceName;
 
   @Lazy
   @Autowired
@@ -141,7 +143,7 @@ public class SendEmailController {
 
   private void saveCentralizedLog(InterruptedException e, Authentication authentication,
       List<? extends EmailRequest> emailRequestList) {
-    centralizedLogService.saveLog(BLAS_EMAIL.getServiceName(), ERROR, e.toString(),
+    centralizedLogService.saveLog(serviceName, ERROR, e.toString(),
         e.getCause() == null ? EMPTY : e.getCause().toString(),
         new JSONArray(emailRequestList).toString(), "User: " + authentication.getName(), null,
         new JSONArray(e.getStackTrace()).toString(), isSendEmailAlert);

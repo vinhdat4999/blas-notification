@@ -1,6 +1,5 @@
 package com.blas.blasemail.email;
 
-import static com.blas.blascommon.enums.BlasService.BLAS_EMAIL;
 import static com.blas.blascommon.enums.LogType.ERROR;
 import static com.blas.blascommon.utils.JsonUtils.maskJsonObjectWithFields;
 import static com.blas.blascommon.utils.ValidUtils.isValidEmail;
@@ -33,6 +32,9 @@ public class Email {
   @Value("${blas.blas-idp.isSendEmailAlert}")
   protected boolean isSendEmailAlert;
 
+  @Value("${blas.service.serviceName}")
+  private String serviceName;
+
   @Value("${blas.blas-email.numberTryToSendEmailAgain}")
   protected int numberTryToSendEmailAgain;
 
@@ -60,7 +62,7 @@ public class Email {
   private Set<String> needFieldMasks;
 
   protected void saveCentralizeLog(Exception e, Object object) {
-    centralizedLogService.saveLog(BLAS_EMAIL.getServiceName(), ERROR, e.toString(),
+    centralizedLogService.saveLog(serviceName, ERROR, e.toString(),
         e.getCause() == null ? EMPTY : e.getCause().toString(),
         maskJsonObjectWithFields(new JSONObject(javaMailSender), needFieldMasks).toString(),
         new JSONObject(object).toString(),
