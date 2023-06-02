@@ -6,6 +6,7 @@ import static com.blas.blascommon.utils.fileutils.FileUtils.delete;
 import static com.blas.blascommon.utils.fileutils.FileUtils.writeByteArrayToFile;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.blas.blascommon.enums.EmailTemplate;
 import com.blas.blascommon.payload.EmailRequest;
@@ -54,6 +55,12 @@ public class HtmlWithAttachmentEmail extends Email {
     new Thread(() -> {
       if (isInvalidReceiverEmail(htmlEmailWithAttachmentRequest, failedEmailList, latch)) {
         return;
+      }
+      if (isBlank(htmlEmailWithAttachmentRequest.getEmailTemplateName())) {
+        saveCentralizeLog(new NullPointerException(INVALID_EMAIL_TEMPLATE),
+            htmlEmailWithAttachmentRequest);
+        htmlEmailWithAttachmentRequest.setReasonSendFailed(INVALID_EMAIL_TEMPLATE);
+        failedEmailList.add(htmlEmailWithAttachmentRequest);
       }
       List<String> tempFileList = new ArrayList<>();
       MimeMessage message = javaMailSender.createMimeMessage();

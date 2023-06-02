@@ -1,5 +1,7 @@
 package com.blas.blasemail.email;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import com.blas.blascommon.enums.EmailTemplate;
 import com.blas.blascommon.payload.EmailRequest;
 import com.blas.blascommon.payload.HtmlEmailRequest;
@@ -22,6 +24,11 @@ public class HtmlEmail extends Email {
     new Thread(() -> {
       if (isInvalidReceiverEmail(htmlEmailRequest, failedEmailList, latch)) {
         return;
+      }
+      if (isBlank(htmlEmailRequest.getEmailTemplateName())) {
+        saveCentralizeLog(new NullPointerException(INVALID_EMAIL_TEMPLATE), htmlEmailRequest);
+        htmlEmailRequest.setReasonSendFailed(INVALID_EMAIL_TEMPLATE);
+        failedEmailList.add(htmlEmailRequest);
       }
       MimeMessage message = javaMailSender.createMimeMessage();
       MimeMessageHelper helper = new MimeMessageHelper(message);

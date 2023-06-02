@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                                      |
 |---------|--------------|----------------------------------------------------|
+| 2.8.0   | 02/06/2023   | Add validation email template                      |
 | 2.7.0   | 25/05/2023   | Upgrade spring boot 3.1.0                          |
 | 2.6.0   | 25/04/2023   | Uptake blas-common v2.6.0                          |
 | 2.5.0   | 03/04/2023   | Uptake blas-common v2.3.0                          |
