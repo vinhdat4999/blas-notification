@@ -2,11 +2,14 @@ package com.blas.blasemail.email;
 
 import static com.blas.blascommon.security.SecurityUtils.base64Decode;
 import static com.blas.blascommon.utils.IdUtils.genUUID;
+import static com.blas.blascommon.utils.StringUtils.DOT;
 import static com.blas.blascommon.utils.fileutils.FileUtils.delete;
 import static com.blas.blascommon.utils.fileutils.FileUtils.writeByteArrayToFile;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import com.blas.blascommon.enums.EmailTemplate;
 import com.blas.blascommon.payload.EmailRequest;
@@ -26,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.springframework.data.util.Pair;
 import org.springframework.mail.MailException;
@@ -33,6 +37,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Async
 @Service
 public class HtmlWithAttachmentEmail extends Email {
@@ -95,6 +100,16 @@ public class HtmlWithAttachmentEmail extends Email {
         errorHandler(illArgException, htmlEmailWithAttachmentRequest, failedEmailList,
             INVALID_EMAIL_TEMPLATE);
       } finally {
+        try {
+          String unkMessage = validateUnknownVariable(
+              EmailTemplate.valueOf(htmlEmailWithAttachmentRequest.getEmailTemplateName()),
+              htmlEmailWithAttachmentRequest.getData().keySet());
+          htmlEmailWithAttachmentRequest.setReasonSendFailed(
+              isEmpty(htmlEmailWithAttachmentRequest.getReasonSendFailed()) ? unkMessage
+                  : DOT + SPACE + unkMessage);
+        } catch (IOException e) {
+          log.error(e.toString());
+        }
         deleteTempFileList(tempFileList);
         latch.countDown();
       }

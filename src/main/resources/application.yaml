@@ -28,7 +28,7 @@ spring:
             enable: true
             required: true
           ssl:
-            protocols: TLSv1.2
+            protocols: TLSv1.3
             checkserveridentity: true
           socketFactory:
             class: javax.net.ssl.SSLSocketFactory
@@ -40,9 +40,9 @@ blas:
   gate-interceptor:
     enableLogRequest: true
     enableLogLocalRequest: false
-  blas-support-service:
-    maintenance:
-      endpointCheck: http://localhost:8084/maintenance/check
+  blas-service-support:
+    throughServiceSupport: true
+    endpointCheckMaintenance: http://localhost:8084/maintenance/check
   blas-email:
     dailyQuotaNormalUser: 10
     numberTryToSendEmailAgain: 4
@@ -57,5 +57,5 @@ blas:
 #    name: application.log
 #  level:
 #    root: DEBUG
-#    org.springframework: WARN
-#    com.example.TaskManagement.service: DEBUG
+#    org.springframework: DEBUG
+#    com.blas.blasemail: DEBUG

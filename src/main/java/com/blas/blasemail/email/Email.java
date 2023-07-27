@@ -2,14 +2,20 @@ package com.blas.blasemail.email;
 
 import static com.blas.blascommon.enums.LogType.ERROR;
 import static com.blas.blascommon.utils.JsonUtils.maskJsonObjectWithFields;
+import static com.blas.blascommon.utils.StringUtils.COMMA;
 import static com.blas.blascommon.utils.ValidUtils.isValidEmail;
 import static java.lang.String.format;
+import static java.lang.String.join;
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import com.blas.blascommon.core.service.CentralizedLogService;
+import com.blas.blascommon.enums.EmailTemplate;
 import com.blas.blascommon.payload.EmailRequest;
 import com.blas.blascommon.utils.TemplateUtils;
 import jakarta.mail.internet.MimeMessage;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -109,5 +115,20 @@ public class Email {
     saveCentralizeLog(exception, emailRequest);
     emailRequest.setReasonSendFailed(errorMessage);
     failedEmailList.add(emailRequest);
+  }
+
+  protected String validateUnknownVariable(EmailTemplate emailTemplate, Set<String> variables)
+      throws IOException {
+    List<String> unknownVars = new ArrayList<>();
+    Set<String> variableOfTemplate = templateUtils.getAllVariableOfThymeleafTemplate(emailTemplate);
+    for (String variable : variables) {
+      if (!variableOfTemplate.contains(variable)) {
+        unknownVars.add(variable);
+      }
+    }
+    if (isEmpty(unknownVars)) {
+      return EMPTY;
+    }
+    return "Unknown variables: " + join(COMMA, unknownVars);
   }
 }

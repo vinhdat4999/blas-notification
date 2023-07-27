@@ -1,8 +1,12 @@
 package com.blas.blasemail.email;
 
+import static com.blas.blascommon.utils.StringUtils.DOT;
+import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import com.blas.blascommon.enums.EmailTemplate;
+import com.blas.blascommon.exceptions.types.BlasException;
 import com.blas.blascommon.payload.EmailRequest;
 import com.blas.blascommon.payload.HtmlEmailRequest;
 import jakarta.mail.MessagingException;
@@ -10,11 +14,13 @@ import jakarta.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Async
 @Service
 public class HtmlEmail extends Email {
@@ -48,6 +54,16 @@ public class HtmlEmail extends Email {
       } catch (IllegalArgumentException illArgException) {
         errorHandler(illArgException, htmlEmailRequest, failedEmailList, INVALID_EMAIL_TEMPLATE);
       } finally {
+        try {
+          String unkMessage = validateUnknownVariable(
+              EmailTemplate.valueOf(htmlEmailRequest.getEmailTemplateName()),
+              htmlEmailRequest.getData().keySet());
+          htmlEmailRequest.setReasonSendFailed(
+              isEmpty(htmlEmailRequest.getReasonSendFailed()) ? unkMessage
+                  : DOT + SPACE + unkMessage);
+        } catch (IOException e) {
+          log.error(e.toString());
+        }
         latch.countDown();
       }
     }).start();
