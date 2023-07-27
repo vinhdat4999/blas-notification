@@ -1,10 +1,14 @@
 package com.blas.blasemail.controller;
 
+import static com.blas.blascommon.enums.FileType.XLSX;
 import static com.blas.blascommon.enums.LogType.ERROR;
 import static com.blas.blascommon.security.SecurityUtils.getUserIdLoggedIn;
 import static com.blas.blascommon.security.SecurityUtils.getUsernameLoggedIn;
 import static com.blas.blascommon.security.SecurityUtils.isPrioritizedRole;
+import static com.blas.blascommon.utils.StringUtils.DOT;
+import static com.blas.blascommon.utils.fileutils.exportfile.Excel.exportToExcel;
 import static com.blas.blascommon.utils.fileutils.importfile.Excel.importFromExcel;
+import static java.lang.System.currentTimeMillis;
 import static java.time.LocalDateTime.now;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
@@ -29,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,6 +47,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @RestController
 @RequestMapping(value = "/send-email")
 public class SendEmailController {
@@ -54,6 +60,8 @@ public class SendEmailController {
   private static final String COLUMN_EMAIL_TO_NOT_FOUND = "Column emailTo not found";
   private static final String COLUMN_TITLE_TO_NOT_FOUND = "Column title not found";
   private static final String COLUMN_EMAIL_TEMPLATE_NAME_TO_NOT_FOUND = "Column emailTemplateName not found";
+  private static final String NUMBER_OF = "No";
+  private static final String REASON_SEND_FAILED = "reasonSendFailed";
 
   @Value("${blas.blas-idp.isSendEmailAlert}")
   protected boolean isSendEmailAlert;
@@ -138,7 +146,7 @@ public class SendEmailController {
         throw new BadRequestException(COLUMN_EMAIL_TO_NOT_FOUND);
       }
       String[] lineData = data.get(index);
-      if(lineData.length==0){
+      if (lineData.length == 0) {
         continue;
       }
       String emailTo = lineData[headerMap.get(EMAIL_TO)];
@@ -175,6 +183,34 @@ public class SendEmailController {
       Thread.currentThread().interrupt();
       throw new BadRequestException(INTERNAL_SYSTEM_ERROR_MSG);
     }
+    List<String> headers = new ArrayList<>();
+    headers.add(NUMBER_OF);
+    headers.add(EMAIL_TO);
+    headers.add(TITLE);
+    headers.add(EMAIL_TEMPLATE_NAME);
+    headers.add(REASON_SEND_FAILED);
+    headers.addAll(htmlEmailPayloadList.get(0).getData().keySet());
+    List<String[]> data = new ArrayList<>();
+    for (int index = 0; index < htmlEmailPayloadList.size(); index++) {
+      HtmlEmailRequest htmlEmailRequest = htmlEmailPayloadList.get(index);
+      List<String> lineData = new ArrayList<>();
+      lineData.add(String.valueOf(index+1));
+      lineData.add(htmlEmailRequest.getEmailTo());
+      lineData.add(htmlEmailRequest.getTitle());
+      lineData.add(htmlEmailRequest.getEmailTemplateName());
+      lineData.add(htmlEmailRequest.getReasonSendFailed());
+      for (int subIndex = 5; subIndex < headers.size(); subIndex++) {
+        lineData.add(htmlEmailRequest.getData().get(headers.get(subIndex)));
+      }
+      data.add(lineData.toArray(new String[0]));
+    }
+    try {
+      exportToExcel(headers.toArray(new String[0]), data,
+          "temp/SEND_EMAIL_RESULT_" + currentTimeMillis() + DOT + XLSX.getPostfix());
+    } catch (IOException e) {
+      log.error(e.toString());
+    }
+
     emailLogService.createEmailLog(
         buildEmailLog(failedEmailList.size(), failedEmailList, sentEmailList.size(),
             sentEmailList));
