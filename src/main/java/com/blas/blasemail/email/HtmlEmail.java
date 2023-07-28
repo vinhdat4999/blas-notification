@@ -1,12 +1,14 @@
 package com.blas.blasemail.email;
 
 import static com.blas.blascommon.utils.StringUtils.DOT;
+import static com.blas.blasemail.constants.EmailConstant.STATUS_FAILED;
+import static com.blas.blasemail.constants.EmailConstant.STATUS_SUCCESS;
+import static java.time.LocalDateTime.now;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import com.blas.blascommon.enums.EmailTemplate;
-import com.blas.blascommon.exceptions.types.BlasException;
 import com.blas.blascommon.payload.EmailRequest;
 import com.blas.blascommon.payload.HtmlEmailRequest;
 import jakarta.mail.MessagingException;
@@ -50,11 +52,15 @@ public class HtmlEmail extends Email {
       } catch (MailException | MessagingException mailException) {
         trySendingEmail(htmlEmailRequest, message, sentEmailList, failedEmailList);
       } catch (IOException ioException) {
+        htmlEmailRequest.setStatus(STATUS_FAILED);
         errorHandler(ioException, htmlEmailRequest, failedEmailList, INTERNAL_SYSTEM_MSG);
       } catch (IllegalArgumentException illArgException) {
+        htmlEmailRequest.setStatus(STATUS_FAILED);
         errorHandler(illArgException, htmlEmailRequest, failedEmailList, INVALID_EMAIL_TEMPLATE);
       } finally {
         try {
+          htmlEmailRequest.setStatus(STATUS_SUCCESS);
+          htmlEmailRequest.setSentTime(now());
           String unkMessage = validateUnknownVariable(
               EmailTemplate.valueOf(htmlEmailRequest.getEmailTemplateName()),
               htmlEmailRequest.getData().keySet());

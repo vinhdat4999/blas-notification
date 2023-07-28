@@ -4,8 +4,11 @@ import static com.blas.blascommon.enums.LogType.ERROR;
 import static com.blas.blascommon.utils.JsonUtils.maskJsonObjectWithFields;
 import static com.blas.blascommon.utils.StringUtils.COMMA;
 import static com.blas.blascommon.utils.ValidUtils.isValidEmail;
+import static com.blas.blasemail.constants.EmailConstant.STATUS_FAILED;
+import static com.blas.blasemail.constants.EmailConstant.STATUS_SUCCESS;
 import static java.lang.String.format;
 import static java.lang.String.join;
+import static java.time.LocalDateTime.now;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
@@ -35,11 +38,9 @@ public class Email {
   public static final String INTERNAL_SYSTEM_MSG = "Blas Email internal error";
   protected static final String INVALID_EMAIL_MSG = "Invalid receiver email: %s";
   protected static final String INVALID_EMAIL_TEMPLATE = "Email template not found";
+
   @Value("${blas.blas-idp.isSendEmailAlert}")
   protected boolean isSendEmailAlert;
-
-  @Value("${blas.service.serviceName}")
-  private String serviceName;
 
   @Value("${blas.blas-email.numberTryToSendEmailAgain}")
   protected int numberTryToSendEmailAgain;
@@ -62,6 +63,9 @@ public class Email {
   @Lazy
   @Autowired
   protected TemplateUtils templateUtils;
+
+  @Value("${blas.service.serviceName}")
+  private String serviceName;
 
   @Lazy
   @Autowired
@@ -98,12 +102,15 @@ public class Email {
         Thread.sleep(waitTime);
         javaMailSender.send(message);
         sentEmailList.add(emailRequest);
+        emailRequest.setStatus(STATUS_SUCCESS);
+        emailRequest.setSentTime(now());
         return;
       } catch (MailException | InterruptedException retryException) {
         exception = retryException;
         attempts++;
       }
     }
+    emailRequest.setStatus(STATUS_FAILED);
     emailRequest.setReasonSendFailed(INTERNAL_SYSTEM_MSG);
     assert exception != null;
     saveCentralizeLog(exception, emailRequest);

@@ -100,18 +100,7 @@ public class HtmlWithAttachmentEmail extends Email {
         errorHandler(illArgException, htmlEmailWithAttachmentRequest, failedEmailList,
             INVALID_EMAIL_TEMPLATE);
       } finally {
-        try {
-          String unkMessage = validateUnknownVariable(
-              EmailTemplate.valueOf(htmlEmailWithAttachmentRequest.getEmailTemplateName()),
-              htmlEmailWithAttachmentRequest.getData().keySet());
-          htmlEmailWithAttachmentRequest.setReasonSendFailed(
-              isEmpty(htmlEmailWithAttachmentRequest.getReasonSendFailed()) ? unkMessage
-                  : DOT + SPACE + unkMessage);
-        } catch (IOException e) {
-          log.error(e.toString());
-        }
-        deleteTempFileList(tempFileList);
-        latch.countDown();
+        unknownVariableHandler(htmlEmailWithAttachmentRequest, tempFileList, latch);
       }
     }).start();
   }
@@ -160,5 +149,21 @@ public class HtmlWithAttachmentEmail extends Email {
         saveCentralizeLog(e, EMPTY);
       }
     });
+  }
+
+  private void unknownVariableHandler(HtmlEmailWithAttachmentRequest htmlEmailWithAttachmentRequest,
+      List<String> tempFileList, CountDownLatch latch) {
+    try {
+      String unkMessage = validateUnknownVariable(
+          EmailTemplate.valueOf(htmlEmailWithAttachmentRequest.getEmailTemplateName()),
+          htmlEmailWithAttachmentRequest.getData().keySet());
+      htmlEmailWithAttachmentRequest.setReasonSendFailed(
+          isEmpty(htmlEmailWithAttachmentRequest.getReasonSendFailed()) ? unkMessage
+              : DOT + SPACE + unkMessage);
+    } catch (IOException e) {
+      log.error(e.toString());
+    }
+    deleteTempFileList(tempFileList);
+    latch.countDown();
   }
 }

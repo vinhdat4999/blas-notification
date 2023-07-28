@@ -7,7 +7,6 @@ import static com.blas.blascommon.security.SecurityUtils.getUsernameLoggedIn;
 import static com.blas.blascommon.security.SecurityUtils.isPrioritizedRole;
 import static com.blas.blascommon.utils.StringUtils.DOT;
 import static com.blas.blascommon.utils.fileutils.exportfile.Excel.exportToExcel;
-import static com.blas.blascommon.utils.fileutils.importfile.Excel.importFromExcel;
 import static java.lang.System.currentTimeMillis;
 import static java.time.LocalDateTime.now;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -22,16 +21,12 @@ import com.blas.blascommon.exceptions.types.ForbiddenException;
 import com.blas.blascommon.payload.EmailRequest;
 import com.blas.blascommon.payload.HtmlEmailRequest;
 import com.blas.blascommon.payload.HtmlEmailResponse;
-import com.blas.blascommon.payload.HtmlEmailWithAttachmentRequest;
-import com.blas.blascommon.payload.HtmlEmailWithAttachmentResponse;
 import com.blas.blasemail.email.HtmlEmail;
 import com.blas.blasemail.email.HtmlWithAttachmentEmail;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
@@ -40,28 +35,21 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.stereotype.Component;
 
 @Slf4j
-@RestController
-@RequestMapping(value = "/send-email")
-public class SendEmailController {
+@Component
+public class EmailController {
 
+  protected static final String INTERNAL_SYSTEM_ERROR_MSG = "Blas Email internal error. Cannot determine status of emails.";
+  protected static final String EMAIL_TO = "emailTo";
+  protected static final String TITLE = "title";
+  protected static final String EMAIL_TEMPLATE_NAME = "emailTemplateName";
   private static final String EXCEEDED_QUOTA = "Exceeded the quota today";
-  private static final String INTERNAL_SYSTEM_ERROR_MSG = "Blas Email internal error. Cannot determine status of emails.";
-  private static final String EMAIL_TO = "emailTo";
-  private static final String TITLE = "title";
-  private static final String EMAIL_TEMPLATE_NAME = "emailTemplateName";
-  private static final String COLUMN_EMAIL_TO_NOT_FOUND = "Column emailTo not found";
-  private static final String COLUMN_TITLE_TO_NOT_FOUND = "Column title not found";
-  private static final String COLUMN_EMAIL_TEMPLATE_NAME_TO_NOT_FOUND = "Column emailTemplateName not found";
   private static final String NUMBER_OF = "No";
   private static final String REASON_SEND_FAILED = "reasonSendFailed";
+  private static final String STATUS_EMAIL = "statusEmail";
+  private static final String SENT_TIME = "sentTime";
 
   @Value("${blas.blas-idp.isSendEmailAlert}")
   protected boolean isSendEmailAlert;
@@ -69,16 +57,20 @@ public class SendEmailController {
   @Value("${blas.service.serviceName}")
   private String serviceName;
 
+  @Value("${blas.blas-email.dailyQuotaNormalUser}")
+  private int dailyQuotaNormalUser;
+
   @Lazy
   @Autowired
   protected CentralizedLogService centralizedLogService;
 
-  List<EmailRequest> sentEmailList;
+  @Lazy
+  @Autowired
+  protected HtmlWithAttachmentEmail htmlWithAttachmentEmail;
 
-  List<EmailRequest> failedEmailList;
-
-  @Value("${blas.blas-email.dailyQuotaNormalUser}")
-  private int dailyQuotaNormalUser;
+  @Lazy
+  @Autowired
+  protected EmailLogService emailLogService;
 
   @Lazy
   @Autowired
@@ -86,92 +78,15 @@ public class SendEmailController {
 
   @Lazy
   @Autowired
-  private HtmlWithAttachmentEmail htmlWithAttachmentEmail;
-
-  @Lazy
-  @Autowired
-  private EmailLogService emailLogService;
-
-  @Lazy
-  @Autowired
   private AuthUserService authUserService;
 
-  private CountDownLatch latch;
+  protected List<EmailRequest> sentEmailList;
 
-  @PostMapping(value = "/html")
-  public ResponseEntity<HtmlEmailResponse> sendHtmlEmailHandler(
-      @RequestBody List<HtmlEmailRequest> htmlEmailPayloadList, Authentication authentication) {
-    return sendHtmlEmail(htmlEmailPayloadList, authentication);
-  }
+  protected List<EmailRequest> failedEmailList;
 
-  @PostMapping(value = "/html-with-attachment")
-  public ResponseEntity<HtmlEmailWithAttachmentResponse> sendHtmlWithFilesEmailHandler(
-      @RequestBody List<HtmlEmailWithAttachmentRequest> htmlEmailWithAttachmentRequestPayloadList,
-      Authentication authentication) {
-    setUpBeforeSendEmail(authentication, htmlEmailWithAttachmentRequestPayloadList);
-    htmlEmailWithAttachmentRequestPayloadList.forEach(
-        email -> htmlWithAttachmentEmail.sendEmail(email, sentEmailList, failedEmailList, latch));
-    try {
-      latch.await();
-    } catch (InterruptedException e) {
-      saveCentralizedLog(e, authentication, htmlEmailWithAttachmentRequestPayloadList);
-      Thread.currentThread().interrupt();
-      throw new BadRequestException(INTERNAL_SYSTEM_ERROR_MSG);
-    }
-    emailLogService.createEmailLog(
-        buildEmailLog(failedEmailList.size(), failedEmailList, sentEmailList.size(),
-            sentEmailList));
-    return ResponseEntity.ok(
-        HtmlEmailWithAttachmentResponse.builder().failedEmailNum(failedEmailList.size())
-            .failedEmailList(failedEmailList).sentEmailNum(sentEmailList.size())
-            .sentEmailList(sentEmailList).generatedBy(authentication.getName()).generatedTime(now())
-            .build());
-  }
+  protected CountDownLatch latch;
 
-  @PostMapping(value = "/html-by-excel")
-  public ResponseEntity<HtmlEmailResponse> sendEmailByExcelFile(
-      @RequestParam("email-file") MultipartFile multipartFile, Authentication authentication)
-      throws IOException {
-
-    List<String[]> data = importFromExcel(multipartFile.getInputStream(),
-        multipartFile.getOriginalFilename());
-    Map<String, Integer> headerMap = new HashMap<>();
-    String[] headers = data.get(0);
-    List<HtmlEmailRequest> htmlEmailRequests = new ArrayList<>();
-    for (int index = 0; index < headers.length; index++) {
-      headerMap.put(headers[index], index);
-    }
-    for (int index = 1; index < data.size(); index++) {
-      if (!headerMap.containsKey(EMAIL_TO)) {
-        throw new BadRequestException(COLUMN_EMAIL_TO_NOT_FOUND);
-      }
-      String[] lineData = data.get(index);
-      if (lineData.length == 0) {
-        continue;
-      }
-      String emailTo = lineData[headerMap.get(EMAIL_TO)];
-      if (!headerMap.containsKey(TITLE)) {
-        throw new BadRequestException(COLUMN_TITLE_TO_NOT_FOUND);
-      }
-      String title = lineData[headerMap.get(TITLE)];
-      if (!headerMap.containsKey(EMAIL_TEMPLATE_NAME)) {
-        throw new BadRequestException(COLUMN_EMAIL_TEMPLATE_NAME_TO_NOT_FOUND);
-      }
-      String emailTemplateName = lineData[headerMap.get(EMAIL_TEMPLATE_NAME)];
-      Map<String, String> variables = new HashMap<>();
-      for (int subIndex = 0; subIndex < headers.length; subIndex++) {
-        if (subIndex != headerMap.get(EMAIL_TO) && subIndex != headerMap.get(TITLE)
-            && subIndex != headerMap.get(EMAIL_TEMPLATE_NAME)) {
-          variables.put(headers[subIndex], subIndex < lineData.length ? lineData[subIndex] : EMPTY);
-        }
-      }
-      htmlEmailRequests.add(
-          new HtmlEmailRequest(emailTo, title, emailTemplateName, variables, null));
-    }
-    return sendHtmlEmail(htmlEmailRequests, authentication);
-  }
-
-  private ResponseEntity<HtmlEmailResponse> sendHtmlEmail(
+  protected ResponseEntity<HtmlEmailResponse> sendHtmlEmail(
       List<HtmlEmailRequest> htmlEmailPayloadList, Authentication authentication) {
     setUpBeforeSendEmail(authentication, htmlEmailPayloadList);
     htmlEmailPayloadList.forEach(
@@ -189,17 +104,21 @@ public class SendEmailController {
     headers.add(TITLE);
     headers.add(EMAIL_TEMPLATE_NAME);
     headers.add(REASON_SEND_FAILED);
+    headers.add(STATUS_EMAIL);
+    headers.add(SENT_TIME);
     headers.addAll(htmlEmailPayloadList.get(0).getData().keySet());
     List<String[]> data = new ArrayList<>();
     for (int index = 0; index < htmlEmailPayloadList.size(); index++) {
       HtmlEmailRequest htmlEmailRequest = htmlEmailPayloadList.get(index);
       List<String> lineData = new ArrayList<>();
-      lineData.add(String.valueOf(index+1));
+      lineData.add(String.valueOf(index + 1));
       lineData.add(htmlEmailRequest.getEmailTo());
       lineData.add(htmlEmailRequest.getTitle());
       lineData.add(htmlEmailRequest.getEmailTemplateName());
       lineData.add(htmlEmailRequest.getReasonSendFailed());
-      for (int subIndex = 5; subIndex < headers.size(); subIndex++) {
+      lineData.add(htmlEmailRequest.getStatus());
+      lineData.add(htmlEmailRequest.getSentTime().toString());
+      for (int subIndex = 7; subIndex < headers.size(); subIndex++) {
         lineData.add(htmlEmailRequest.getData().get(headers.get(subIndex)));
       }
       data.add(lineData.toArray(new String[0]));
@@ -220,7 +139,7 @@ public class SendEmailController {
         .build());
   }
 
-  private EmailLog buildEmailLog(int failedEmailNum, List<EmailRequest> failedEmailList,
+  protected EmailLog buildEmailLog(int failedEmailNum, List<EmailRequest> failedEmailList,
       int sentEmailNum, List<EmailRequest> sentEmailList) {
     AuthUser generatedBy = authUserService.getAuthUserByUsername(getUsernameLoggedIn());
     return EmailLog.builder().authUser(generatedBy).timeLog(now()).failedEmailNum(failedEmailNum)
@@ -237,7 +156,7 @@ public class SendEmailController {
     }
   }
 
-  private void saveCentralizedLog(InterruptedException e, Authentication authentication,
+  protected void saveCentralizedLog(InterruptedException e, Authentication authentication,
       List<? extends EmailRequest> emailRequestList) {
     centralizedLogService.saveLog(serviceName, ERROR, e.toString(),
         e.getCause() == null ? EMPTY : e.getCause().toString(),
@@ -245,7 +164,7 @@ public class SendEmailController {
         new JSONArray(e.getStackTrace()).toString(), isSendEmailAlert);
   }
 
-  private void setUpBeforeSendEmail(Authentication authentication,
+  protected void setUpBeforeSendEmail(Authentication authentication,
       List<? extends EmailRequest> emailRequestList) {
     isPrioritizedRoleOrInQuota(emailRequestList.size(), authentication);
     latch = new CountDownLatch(emailRequestList.size());
