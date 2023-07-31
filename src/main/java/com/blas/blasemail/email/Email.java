@@ -104,13 +104,13 @@ public class Email {
         sentEmailList.add(emailRequest);
         emailRequest.setStatus(STATUS_SUCCESS);
         emailRequest.setSentTime(now());
+        System.out.println("TEST DAT: " + attempts);
         return;
       } catch (MailException | InterruptedException retryException) {
         exception = retryException;
         attempts++;
       }
     }
-    emailRequest.setStatus(STATUS_FAILED);
     emailRequest.setReasonSendFailed(INTERNAL_SYSTEM_MSG);
     assert exception != null;
     saveCentralizeLog(exception, emailRequest);

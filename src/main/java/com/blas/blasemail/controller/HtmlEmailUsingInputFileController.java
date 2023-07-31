@@ -1,6 +1,7 @@
 package com.blas.blasemail.controller;
 
 import static com.blas.blascommon.utils.fileutils.importfile.Excel.importFromExcel;
+import static com.blas.blasemail.constants.EmailConstant.STATUS_FAILED;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import com.blas.blascommon.exceptions.types.BadRequestException;
@@ -74,6 +75,6 @@ public class HtmlEmailUsingInputFileController extends EmailController {
         variables.put(headers[subIndex], subIndex < lineData.length ? lineData[subIndex] : EMPTY);
       }
     }
-    return new HtmlEmailRequest(emailTo, title, emailTemplateName, variables, null, null, null);
+    return new HtmlEmailRequest(emailTo, title, emailTemplateName, variables, null, STATUS_FAILED, null);
   }
 }

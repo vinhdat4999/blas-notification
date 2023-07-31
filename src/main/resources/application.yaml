@@ -45,7 +45,7 @@ blas:
     endpointCheckMaintenance: http://localhost:8084/maintenance/check
   blas-email:
     dailyQuotaNormalUser: 10
-    numberTryToSendEmailAgain: 4
+    numberTryToSendEmailAgain: 9
     waitTimeFirstTryToSendEmailAgain: 1000 #miliseconds
     needMaskFields: password
   blas-idp:
