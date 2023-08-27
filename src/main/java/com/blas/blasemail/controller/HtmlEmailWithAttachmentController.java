@@ -2,9 +2,15 @@ package com.blas.blasemail.controller;
 
 import static java.time.LocalDateTime.now;
 
+import com.blas.blascommon.core.model.EmailLog;
+import com.blas.blascommon.core.service.AuthUserService;
+import com.blas.blascommon.core.service.CentralizedLogService;
+import com.blas.blascommon.core.service.EmailLogService;
 import com.blas.blascommon.exceptions.types.BadRequestException;
 import com.blas.blascommon.payload.HtmlEmailWithAttachmentRequest;
 import com.blas.blascommon.payload.HtmlEmailWithAttachmentResponse;
+import com.blas.blasemail.email.HtmlEmail;
+import com.blas.blasemail.email.HtmlWithAttachmentEmail;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +24,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/send-email")
 public class HtmlEmailWithAttachmentController extends EmailController {
+
+  public HtmlEmailWithAttachmentController(CentralizedLogService centralizedLogService,
+      HtmlWithAttachmentEmail htmlWithAttachmentEmail, EmailLogService emailLogService,
+      HtmlEmail htmlEmail, AuthUserService authUserService) {
+    super(centralizedLogService, htmlWithAttachmentEmail, emailLogService, htmlEmail,
+        authUserService);
+  }
 
   @PostMapping(value = "/html-with-attachment")
   public ResponseEntity<HtmlEmailWithAttachmentResponse> sendHtmlWithFilesEmailHandler(
@@ -33,9 +46,12 @@ public class HtmlEmailWithAttachmentController extends EmailController {
       Thread.currentThread().interrupt();
       throw new BadRequestException(INTERNAL_SYSTEM_ERROR_MSG);
     }
-    emailLogService.createEmailLog(
+    EmailLog emailLog = emailLogService.createEmailLog(
         buildEmailLog(failedEmailList.size(), failedEmailList, sentEmailList.size(),
             sentEmailList));
+    log.info(
+        String.format("Sent email - email_log_id: %s - fileReport: null",
+            emailLog.getEmailLogId()));
     return ResponseEntity.ok(
         HtmlEmailWithAttachmentResponse.builder().failedEmailNum(failedEmailList.size())
             .failedEmailList(failedEmailList).sentEmailNum(sentEmailList.size())

@@ -4,9 +4,14 @@ import static com.blas.blascommon.utils.fileutils.importfile.Excel.importFromExc
 import static com.blas.blasemail.constants.EmailConstant.STATUS_FAILED;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
+import com.blas.blascommon.core.service.AuthUserService;
+import com.blas.blascommon.core.service.CentralizedLogService;
+import com.blas.blascommon.core.service.EmailLogService;
 import com.blas.blascommon.exceptions.types.BadRequestException;
 import com.blas.blascommon.payload.HtmlEmailRequest;
 import com.blas.blascommon.payload.HtmlEmailResponse;
+import com.blas.blasemail.email.HtmlEmail;
+import com.blas.blasemail.email.HtmlWithAttachmentEmail;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,6 +36,16 @@ public class HtmlEmailUsingInputFileController extends EmailController {
   private static final String COLUMN_TITLE_TO_NOT_FOUND = "Column title not found";
   private static final String COLUMN_EMAIL_TEMPLATE_NAME_TO_NOT_FOUND = "Column emailTemplateName not found";
 
+  public HtmlEmailUsingInputFileController(
+      CentralizedLogService centralizedLogService,
+      HtmlWithAttachmentEmail htmlWithAttachmentEmail,
+      EmailLogService emailLogService,
+      HtmlEmail htmlEmail,
+      AuthUserService authUserService) {
+    super(centralizedLogService, htmlWithAttachmentEmail, emailLogService, htmlEmail,
+        authUserService);
+  }
+
   @PostMapping(value = "/html-by-excel")
   public ResponseEntity<HtmlEmailResponse> sendEmailByExcelFile(
       @RequestParam("email-file") MultipartFile multipartFile, Authentication authentication)
@@ -51,7 +66,7 @@ public class HtmlEmailUsingInputFileController extends EmailController {
       }
       htmlEmailRequests.add(buildHtmlEmailRequest(headerMap, lineData, headers));
     }
-    return sendHtmlEmail(htmlEmailRequests, authentication);
+    return sendHtmlEmail(htmlEmailRequests, authentication, true);
   }
 
   private HtmlEmailRequest buildHtmlEmailRequest(Map<String, Integer> headerMap,
@@ -75,6 +90,7 @@ public class HtmlEmailUsingInputFileController extends EmailController {
         variables.put(headers[subIndex], subIndex < lineData.length ? lineData[subIndex] : EMPTY);
       }
     }
-    return new HtmlEmailRequest(emailTo, title, emailTemplateName, variables, null, STATUS_FAILED, null);
+    return new HtmlEmailRequest(emailTo, title, emailTemplateName, variables, null, STATUS_FAILED,
+        null);
   }
 }
