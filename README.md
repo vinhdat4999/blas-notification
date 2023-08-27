@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                                                       |
 |---------|--------------|---------------------------------------------------------------------|
+| 2.12.0  | 27/08/2023   | Refactor log                                                        |
 | 2.11.0  | 31/07/2023   | Support send email using Excel data, export result and use TLS v1.3 |
 | 2.10.0  | 12/06/2023   | Support check maintenance time and Spring boot actuator             |
 | 2.9.0   | 02/06/2023   | Upgrade blas-common 3.0.0                                           |

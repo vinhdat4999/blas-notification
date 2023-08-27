@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
@@ -61,24 +60,19 @@ public class EmailController {
   private int dailyQuotaNormalUser;
 
   @Lazy
-  @Autowired
-  protected CentralizedLogService centralizedLogService;
+  protected final CentralizedLogService centralizedLogService;
 
   @Lazy
-  @Autowired
-  protected HtmlWithAttachmentEmail htmlWithAttachmentEmail;
+  protected final HtmlWithAttachmentEmail htmlWithAttachmentEmail;
 
   @Lazy
-  @Autowired
-  protected EmailLogService emailLogService;
+  protected final EmailLogService emailLogService;
 
   @Lazy
-  @Autowired
-  private HtmlEmail htmlEmail;
+  private final HtmlEmail htmlEmail;
 
   @Lazy
-  @Autowired
-  private AuthUserService authUserService;
+  private final AuthUserService authUserService;
 
   protected List<EmailRequest> sentEmailList;
 
@@ -86,8 +80,19 @@ public class EmailController {
 
   protected CountDownLatch latch;
 
+  public EmailController(CentralizedLogService centralizedLogService,
+      HtmlWithAttachmentEmail htmlWithAttachmentEmail, EmailLogService emailLogService,
+      HtmlEmail htmlEmail, AuthUserService authUserService) {
+    this.centralizedLogService = centralizedLogService;
+    this.htmlWithAttachmentEmail = htmlWithAttachmentEmail;
+    this.emailLogService = emailLogService;
+    this.htmlEmail = htmlEmail;
+    this.authUserService = authUserService;
+  }
+
   protected ResponseEntity<HtmlEmailResponse> sendHtmlEmail(
-      List<HtmlEmailRequest> htmlEmailPayloadList, Authentication authentication) {
+      List<HtmlEmailRequest> htmlEmailPayloadList, Authentication authentication,
+      boolean genFileReport) {
     setUpBeforeSendEmail(authentication, htmlEmailPayloadList);
     htmlEmailPayloadList.forEach(
         email -> htmlEmail.sendEmail(email, sentEmailList, failedEmailList, latch));
@@ -123,16 +128,22 @@ public class EmailController {
       }
       data.add(lineData.toArray(new String[0]));
     }
-    try {
-      exportToExcel(headers.toArray(new String[0]), data,
-          "temp/SEND_EMAIL_RESULT_" + currentTimeMillis() + DOT + XLSX.getPostfix());
-    } catch (IOException e) {
-      log.error(e.toString());
+    String fileReport = null;
+    if (genFileReport) {
+      try {
+        fileReport = "temp/SEND_EMAIL_RESULT_" + currentTimeMillis() + DOT + XLSX.getPostfix();
+        exportToExcel(headers.toArray(new String[0]), data, fileReport);
+      } catch (IOException e) {
+        log.error(e.toString());
+      }
     }
 
-    emailLogService.createEmailLog(
+    EmailLog emailLog = emailLogService.createEmailLog(
         buildEmailLog(failedEmailList.size(), failedEmailList, sentEmailList.size(),
             sentEmailList));
+    log.info(
+        String.format("Sent email - email_log_id: %s - fileReport: %s", emailLog.getEmailLogId(),
+            fileReport));
     return ResponseEntity.ok(HtmlEmailResponse.builder().failedEmailNum(failedEmailList.size())
         .failedEmailList(failedEmailList).sentEmailNum(sentEmailList.size())
         .sentEmailList(sentEmailList).generatedBy(authentication.getName()).generatedTime(now())
