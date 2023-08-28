@@ -1,5 +1,6 @@
 package com.blas.blasemail.controller;
 
+import static com.blas.blascommon.exceptions.BlasErrorCode.MSG_FORMATTING_ERROR;
 import static com.blas.blascommon.utils.fileutils.importfile.Excel.importFromExcel;
 import static com.blas.blasemail.constants.EmailConstant.STATUS_FAILED;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -50,7 +52,6 @@ public class HtmlEmailUsingInputFileController extends EmailController {
   public ResponseEntity<HtmlEmailResponse> sendEmailByExcelFile(
       @RequestParam("email-file") MultipartFile multipartFile, Authentication authentication)
       throws IOException {
-
     List<String[]> data = importFromExcel(multipartFile.getInputStream(),
         Objects.requireNonNull(multipartFile.getOriginalFilename()));
     Map<String, Integer> headerMap = new HashMap<>();
@@ -59,30 +60,43 @@ public class HtmlEmailUsingInputFileController extends EmailController {
     for (int index = 0; index < headers.length; index++) {
       headerMap.put(headers[index], index);
     }
+    validateInput(headerMap);
+    String emailTemplate = EMPTY;
     for (int index = 1; index < data.size(); index++) {
       String[] lineData = data.get(index);
       if (lineData.length == 0) {
         continue;
       }
-      htmlEmailRequests.add(buildHtmlEmailRequest(headerMap, lineData, headers));
+      if (index == 1) {
+        emailTemplate = lineData[headerMap.get(EMAIL_TEMPLATE_NAME)];
+      } else {
+        String tempEmailTemplate = lineData[headerMap.get(EMAIL_TEMPLATE_NAME)];
+        if (!StringUtils.equals(emailTemplate, tempEmailTemplate)) {
+          throw new BadRequestException(MSG_FORMATTING_ERROR,
+              "All input record must be same email template");
+        }
+      }
+      htmlEmailRequests.add(buildHtmlEmailRequest(headerMap, lineData, headers, emailTemplate));
     }
     return sendHtmlEmail(htmlEmailRequests, authentication, true);
   }
 
-  private HtmlEmailRequest buildHtmlEmailRequest(Map<String, Integer> headerMap,
-      String[] lineData, String[] headers) {
+  private void validateInput(Map<String, Integer> headerMap) {
     if (!headerMap.containsKey(EMAIL_TO)) {
       throw new BadRequestException(COLUMN_EMAIL_TO_NOT_FOUND);
     }
-    String emailTo = lineData[headerMap.get(EMAIL_TO)];
     if (!headerMap.containsKey(TITLE)) {
       throw new BadRequestException(COLUMN_TITLE_TO_NOT_FOUND);
     }
-    String title = lineData[headerMap.get(TITLE)];
     if (!headerMap.containsKey(EMAIL_TEMPLATE_NAME)) {
       throw new BadRequestException(COLUMN_EMAIL_TEMPLATE_NAME_TO_NOT_FOUND);
     }
-    String emailTemplateName = lineData[headerMap.get(EMAIL_TEMPLATE_NAME)];
+  }
+
+  private HtmlEmailRequest buildHtmlEmailRequest(Map<String, Integer> headerMap,
+      String[] lineData, String[] headers, String emailTemplate) {
+    String emailTo = lineData[headerMap.get(EMAIL_TO)];
+    String title = lineData[headerMap.get(TITLE)];
     Map<String, String> variables = new HashMap<>();
     for (int subIndex = 0; subIndex < headers.length; subIndex++) {
       if (subIndex != headerMap.get(EMAIL_TO) && subIndex != headerMap.get(TITLE)
@@ -90,7 +104,7 @@ public class HtmlEmailUsingInputFileController extends EmailController {
         variables.put(headers[subIndex], subIndex < lineData.length ? lineData[subIndex] : EMPTY);
       }
     }
-    return new HtmlEmailRequest(emailTo, title, emailTemplateName, variables, null, STATUS_FAILED,
+    return new HtmlEmailRequest(emailTo, title, emailTemplate, variables, null, STATUS_FAILED,
         null);
   }
 }

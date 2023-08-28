@@ -154,7 +154,7 @@ public class HtmlWithAttachmentEmail extends Email {
   private void unknownVariableHandler(HtmlEmailWithAttachmentRequest htmlEmailWithAttachmentRequest,
       List<String> tempFileList, CountDownLatch latch) {
     try {
-      String unkMessage = validateUnknownVariable(
+      String unkMessage = validateHeader(
           EmailTemplate.valueOf(htmlEmailWithAttachmentRequest.getEmailTemplateName()),
           htmlEmailWithAttachmentRequest.getData().keySet());
       htmlEmailWithAttachmentRequest.setReasonSendFailed(
