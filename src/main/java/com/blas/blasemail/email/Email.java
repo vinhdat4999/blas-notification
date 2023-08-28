@@ -1,10 +1,10 @@
 package com.blas.blasemail.email;
 
 import static com.blas.blascommon.enums.LogType.ERROR;
+import static com.blas.blascommon.exceptions.BlasErrorCode.MSG_FORMATTING_ERROR;
 import static com.blas.blascommon.utils.JsonUtils.maskJsonObjectWithFields;
 import static com.blas.blascommon.utils.StringUtils.COMMA;
 import static com.blas.blascommon.utils.ValidUtils.isValidEmail;
-import static com.blas.blasemail.constants.EmailConstant.STATUS_FAILED;
 import static com.blas.blasemail.constants.EmailConstant.STATUS_SUCCESS;
 import static java.lang.String.format;
 import static java.lang.String.join;
@@ -14,6 +14,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.enums.EmailTemplate;
+import com.blas.blascommon.exceptions.types.BadRequestException;
 import com.blas.blascommon.payload.EmailRequest;
 import com.blas.blascommon.utils.TemplateUtils;
 import jakarta.mail.internet.MimeMessage;
@@ -104,7 +105,6 @@ public class Email {
         sentEmailList.add(emailRequest);
         emailRequest.setStatus(STATUS_SUCCESS);
         emailRequest.setSentTime(now());
-        System.out.println("TEST DAT: " + attempts);
         return;
       } catch (MailException | InterruptedException retryException) {
         exception = retryException;
@@ -124,10 +124,16 @@ public class Email {
     failedEmailList.add(emailRequest);
   }
 
-  protected String validateUnknownVariable(EmailTemplate emailTemplate, Set<String> variables)
+  protected String validateHeader(EmailTemplate emailTemplate, Set<String> variables)
       throws IOException {
     List<String> unknownVars = new ArrayList<>();
     Set<String> variableOfTemplate = templateUtils.getAllVariableOfThymeleafTemplate(emailTemplate);
+    for (String header : variableOfTemplate) {
+      if (!variables.contains(header)) {
+        throw new BadRequestException(MSG_FORMATTING_ERROR,
+            String.format("Header %s is required for email template: %s", header, emailTemplate));
+      }
+    }
     for (String variable : variables) {
       if (!variableOfTemplate.contains(variable)) {
         unknownVars.add(variable);

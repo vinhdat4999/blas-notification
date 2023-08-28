@@ -7,6 +7,7 @@ import com.blas.blascommon.payload.HtmlEmailRequest;
 import com.blas.blascommon.payload.HtmlEmailResponse;
 import com.blas.blasemail.email.HtmlEmail;
 import com.blas.blasemail.email.HtmlWithAttachmentEmail;
+import java.io.IOException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +34,8 @@ public class HtmlEmailController extends EmailController {
 
   @PostMapping(value = "/html")
   public ResponseEntity<HtmlEmailResponse> sendHtmlEmailHandler(
-      @RequestBody List<HtmlEmailRequest> htmlEmailPayloadList, Authentication authentication) {
+      @RequestBody List<HtmlEmailRequest> htmlEmailPayloadList, Authentication authentication)
+      throws IOException {
     return sendHtmlEmail(htmlEmailPayloadList, authentication, false);
   }
 }

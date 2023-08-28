@@ -49,36 +49,25 @@ public class EmailController {
   private static final String REASON_SEND_FAILED = "reasonSendFailed";
   private static final String STATUS_EMAIL = "statusEmail";
   private static final String SENT_TIME = "sentTime";
-
-  @Value("${blas.blas-idp.isSendEmailAlert}")
-  protected boolean isSendEmailAlert;
-
-  @Value("${blas.service.serviceName}")
-  private String serviceName;
-
-  @Value("${blas.blas-email.dailyQuotaNormalUser}")
-  private int dailyQuotaNormalUser;
-
   @Lazy
   protected final CentralizedLogService centralizedLogService;
-
   @Lazy
   protected final HtmlWithAttachmentEmail htmlWithAttachmentEmail;
-
   @Lazy
   protected final EmailLogService emailLogService;
-
   @Lazy
   private final HtmlEmail htmlEmail;
-
   @Lazy
   private final AuthUserService authUserService;
-
+  @Value("${blas.blas-idp.isSendEmailAlert}")
+  protected boolean isSendEmailAlert;
   protected List<EmailRequest> sentEmailList;
-
   protected List<EmailRequest> failedEmailList;
-
   protected CountDownLatch latch;
+  @Value("${blas.service.serviceName}")
+  private String serviceName;
+  @Value("${blas.blas-email.dailyQuotaNormalUser}")
+  private int dailyQuotaNormalUser;
 
   public EmailController(CentralizedLogService centralizedLogService,
       HtmlWithAttachmentEmail htmlWithAttachmentEmail, EmailLogService emailLogService,
@@ -92,10 +81,11 @@ public class EmailController {
 
   protected ResponseEntity<HtmlEmailResponse> sendHtmlEmail(
       List<HtmlEmailRequest> htmlEmailPayloadList, Authentication authentication,
-      boolean genFileReport) {
+      boolean genFileReport) throws IOException {
     setUpBeforeSendEmail(authentication, htmlEmailPayloadList);
-    htmlEmailPayloadList.forEach(
-        email -> htmlEmail.sendEmail(email, sentEmailList, failedEmailList, latch));
+    for (HtmlEmailRequest emailRequest : htmlEmailPayloadList) {
+      htmlEmail.sendEmail(emailRequest, sentEmailList, failedEmailList, latch);
+    }
     try {
       latch.await();
     } catch (InterruptedException e) {
@@ -144,18 +134,27 @@ public class EmailController {
     log.info(
         String.format("Sent email - email_log_id: %s - fileReport: %s", emailLog.getEmailLogId(),
             fileReport));
-    return ResponseEntity.ok(HtmlEmailResponse.builder().failedEmailNum(failedEmailList.size())
-        .failedEmailList(failedEmailList).sentEmailNum(sentEmailList.size())
-        .sentEmailList(sentEmailList).generatedBy(authentication.getName()).generatedTime(now())
+    return ResponseEntity.ok(HtmlEmailResponse.builder()
+        .failedEmailNum(failedEmailList.size())
+        .failedEmailList(failedEmailList)
+        .sentEmailNum(sentEmailList.size())
+        .sentEmailList(sentEmailList)
+        .generatedBy(authentication.getName())
+        .generatedTime(now())
         .build());
   }
 
   protected EmailLog buildEmailLog(int failedEmailNum, List<EmailRequest> failedEmailList,
       int sentEmailNum, List<EmailRequest> sentEmailList) {
     AuthUser generatedBy = authUserService.getAuthUserByUsername(getUsernameLoggedIn());
-    return EmailLog.builder().authUser(generatedBy).timeLog(now()).failedEmailNum(failedEmailNum)
-        .failedEmailList(new JSONArray(failedEmailList).toString()).sentEmailNum(sentEmailNum)
-        .sentEmailList(new JSONArray(sentEmailList).toString()).build();
+    return EmailLog.builder()
+        .authUser(generatedBy)
+        .timeLog(now())
+        .failedEmailNum(failedEmailNum)
+        .failedEmailList(new JSONArray(failedEmailList).toString())
+        .sentEmailNum(sentEmailNum)
+        .sentEmailList(new JSONArray(sentEmailList).toString())
+        .build();
   }
 
   private void isPrioritizedRoleOrInQuota(int emailNum, Authentication authentication) {

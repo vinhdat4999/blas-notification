@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                                                       |
 |---------|--------------|---------------------------------------------------------------------|
+| 2.13.0  | 28/08/2023   | Add more validation for send email with file input                  |
 | 2.12.0  | 27/08/2023   | Refactor log                                                        |
 | 2.11.0  | 31/07/2023   | Support send email using Excel data, export result and use TLS v1.3 |
 | 2.10.0  | 12/06/2023   | Support check maintenance time and Spring boot actuator             |

@@ -28,7 +28,10 @@ import org.springframework.stereotype.Service;
 public class HtmlEmail extends Email {
 
   public void sendEmail(HtmlEmailRequest htmlEmailRequest, List<EmailRequest> sentEmailList,
-      List<EmailRequest> failedEmailList, CountDownLatch latch) {
+      List<EmailRequest> failedEmailList, CountDownLatch latch) throws IOException {
+    String unkMessage = validateHeader(
+        EmailTemplate.valueOf(htmlEmailRequest.getEmailTemplateName()),
+        htmlEmailRequest.getData().keySet());
     MimeMessage message = javaMailSender.createMimeMessage();
     new Thread(() -> {
       if (isInvalidReceiverEmail(htmlEmailRequest, failedEmailList, latch)) {
@@ -58,17 +61,10 @@ public class HtmlEmail extends Email {
       } catch (IllegalArgumentException illArgException) {
         errorHandler(illArgException, htmlEmailRequest, failedEmailList, INVALID_EMAIL_TEMPLATE);
       } finally {
-        try {
-          htmlEmailRequest.setSentTime(now());
-          String unkMessage = validateUnknownVariable(
-              EmailTemplate.valueOf(htmlEmailRequest.getEmailTemplateName()),
-              htmlEmailRequest.getData().keySet());
-          htmlEmailRequest.setReasonSendFailed(
-              isEmpty(htmlEmailRequest.getReasonSendFailed()) ? unkMessage
-                  : htmlEmailRequest.getReasonSendFailed() + DOT + SPACE + unkMessage);
-        } catch (IOException e) {
-          log.error(e.toString());
-        }
+        htmlEmailRequest.setSentTime(now());
+        htmlEmailRequest.setReasonSendFailed(
+            isEmpty(htmlEmailRequest.getReasonSendFailed()) ? unkMessage
+                : htmlEmailRequest.getReasonSendFailed() + DOT + SPACE + unkMessage);
         latch.countDown();
       }
     }).start();
