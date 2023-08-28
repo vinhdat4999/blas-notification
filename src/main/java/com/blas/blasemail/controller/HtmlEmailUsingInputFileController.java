@@ -37,6 +37,7 @@ public class HtmlEmailUsingInputFileController extends EmailController {
   private static final String COLUMN_EMAIL_TO_NOT_FOUND = "Column emailTo not found";
   private static final String COLUMN_TITLE_TO_NOT_FOUND = "Column title not found";
   private static final String COLUMN_EMAIL_TEMPLATE_NAME_TO_NOT_FOUND = "Column emailTemplateName not found";
+  private static final String ALL_INPUT_RECORD_MUST_BE_SAME_EMAIL_TEMPLATE = "All input record must be same email template";
 
   public HtmlEmailUsingInputFileController(
       CentralizedLogService centralizedLogService,
@@ -73,7 +74,7 @@ public class HtmlEmailUsingInputFileController extends EmailController {
         String tempEmailTemplate = lineData[headerMap.get(EMAIL_TEMPLATE_NAME)];
         if (!StringUtils.equals(emailTemplate, tempEmailTemplate)) {
           throw new BadRequestException(MSG_FORMATTING_ERROR,
-              "All input record must be same email template");
+              ALL_INPUT_RECORD_MUST_BE_SAME_EMAIL_TEMPLATE);
         }
       }
       htmlEmailRequests.add(buildHtmlEmailRequest(headerMap, lineData, headers, emailTemplate));
