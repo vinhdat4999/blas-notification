@@ -1,6 +1,6 @@
 package com.blas.blasemail.controller;
 
-import static com.blas.blascommon.exceptions.BlasErrorCode.MSG_FORMATTING_ERROR;
+import static com.blas.blascommon.exceptions.BlasErrorCodeEnum.MSG_FORMATTING_ERROR;
 import static com.blas.blascommon.utils.fileutils.importfile.Excel.importFromExcel;
 import static com.blas.blasemail.constants.EmailConstant.STATUS_FAILED;
 import static org.apache.commons.lang3.StringUtils.EMPTY;

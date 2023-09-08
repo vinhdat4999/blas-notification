@@ -1,7 +1,7 @@
 package com.blas.blasemail.email;
 
 import static com.blas.blascommon.enums.LogType.ERROR;
-import static com.blas.blascommon.exceptions.BlasErrorCode.MSG_FORMATTING_ERROR;
+import static com.blas.blascommon.exceptions.BlasErrorCodeEnum.MSG_FORMATTING_ERROR;
 import static com.blas.blascommon.utils.JsonUtils.maskJsonObjectWithFields;
 import static com.blas.blascommon.utils.StringUtils.COMMA;
 import static com.blas.blascommon.utils.ValidUtils.isValidEmail;
