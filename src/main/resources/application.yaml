@@ -59,7 +59,7 @@ blas:
     waitTimeFirstTryToSendEmailAgain: 1000 #miliseconds
     needMaskFields: password
   blas-idp:
-    isSendEmailAlert: false
+    isSendEmailAlert: true
     jwt:
       timeToExpiredInternalToken: 120 #2 minutes
 #logging:
