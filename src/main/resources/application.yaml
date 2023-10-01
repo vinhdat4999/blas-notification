@@ -6,6 +6,13 @@ management:
       exposure:
         include: "*"
 spring:
+  task:
+    execution:
+      pool:
+        core-size: 10
+        max-size: 50
+        queue-capacity: 10000
+        keep-alive: 10s
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/blas
@@ -21,6 +28,8 @@ spring:
     port: 465
     username: blasvietnam@gmail.com
     password: pdaifcxvnvsqyums
+#    username: blassystemvietnam@gmail.com
+#    password: gcfeqaxvdfafgxoc
     properties:
       mail:
         smtp:
