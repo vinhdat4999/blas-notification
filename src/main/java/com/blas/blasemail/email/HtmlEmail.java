@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.mail.MailProperties;
@@ -45,48 +46,54 @@ public class HtmlEmail extends Email {
         EmailTemplate.valueOf(htmlEmailRequest.getEmailTemplateName()),
         htmlEmailRequest.getData().keySet());
     MimeMessage message = javaMailSender.createMimeMessage();
-    executor.execute(() -> {
-      if (isInvalidReceiverEmail(htmlEmailRequest, failedEmailList, latch)) {
-        return;
-      }
-      try {
-        Thread.sleep(100);
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
-//      System.out.println(Thread.currentThread());
-      if (isBlank(htmlEmailRequest.getEmailTemplateName())) {
-        saveCentralizeLog(new NullPointerException(INVALID_EMAIL_TEMPLATE), htmlEmailRequest);
-        htmlEmailRequest.setReasonSendFailed(INVALID_EMAIL_TEMPLATE);
-        failedEmailList.add(htmlEmailRequest);
-      }
-      MimeMessageHelper helper = new MimeMessageHelper(message);
-      try {
-        helper.setTo(htmlEmailRequest.getEmailTo());
-        helper.setSubject(htmlEmailRequest.getTitle());
-        String htmlContent = templateUtils.generateHtmlContent(
-            EmailTemplate.valueOf(htmlEmailRequest.getEmailTemplateName()),
-            htmlEmailRequest.getData());
-        helper.setText(htmlContent, true);
+    try {
+      executor.execute(() -> {
+        if (isInvalidReceiverEmail(htmlEmailRequest, failedEmailList, latch)) {
+          return;
+        }
+        try {
+          Thread.sleep(100);
+        } catch (InterruptedException exception) {
+          log.error(exception.toString());
+        }
+        if (isBlank(htmlEmailRequest.getEmailTemplateName())) {
+          saveCentralizeLog(new NullPointerException(INVALID_EMAIL_TEMPLATE), htmlEmailRequest);
+          htmlEmailRequest.setReasonSendFailed(INVALID_EMAIL_TEMPLATE);
+          failedEmailList.add(htmlEmailRequest);
+        }
+        MimeMessageHelper helper = new MimeMessageHelper(message);
+        try {
+          helper.setTo(htmlEmailRequest.getEmailTo());
+          helper.setSubject(htmlEmailRequest.getTitle());
+          String htmlContent = templateUtils.generateHtmlContent(
+              EmailTemplate.valueOf(htmlEmailRequest.getEmailTemplateName()),
+              htmlEmailRequest.getData());
+          helper.setText(htmlContent, true);
 //        javaMailSender.send(message);
-        htmlEmailRequest.setStatus(STATUS_SUCCESS);
-        sentEmailList.add(htmlEmailRequest);
-        Metrics.counter("blas.blas-email.number-of-first-trying").increment();
-      } catch (MailException | MessagingException mailException) {
-        trySendingEmail(htmlEmailRequest, message, sentEmailList, failedEmailList);
-      } catch (IOException ioException) {
-        errorHandler(ioException, htmlEmailRequest, failedEmailList, INTERNAL_SYSTEM_MSG);
-      } catch (IllegalArgumentException illInterArgException) {
-        errorHandler(illInterArgException, htmlEmailRequest, failedEmailList,
-            INVALID_EMAIL_TEMPLATE);
-      } finally {
-        htmlEmailRequest.setSentTime(now());
-        htmlEmailRequest.setReasonSendFailed(
-            isEmpty(htmlEmailRequest.getReasonSendFailed()) ? unkMessage
-                : htmlEmailRequest.getReasonSendFailed() + DOT + SPACE + unkMessage);
-        System.out.println("lack");
-        latch.countDown();
-      }
-    });
+          htmlEmailRequest.setStatus(STATUS_SUCCESS);
+          sentEmailList.add(htmlEmailRequest);
+          Metrics.counter("blas.blas-email.number-of-first-trying").increment();
+        } catch (MailException | MessagingException mailException) {
+          trySendingEmail(htmlEmailRequest, message, sentEmailList, failedEmailList);
+        } catch (IOException ioException) {
+          errorHandler(ioException, htmlEmailRequest, failedEmailList, INTERNAL_SYSTEM_MSG);
+        } catch (IllegalArgumentException illInterArgException) {
+          errorHandler(illInterArgException, htmlEmailRequest, failedEmailList,
+              INVALID_EMAIL_TEMPLATE);
+        } finally {
+          htmlEmailRequest.setSentTime(now());
+          htmlEmailRequest.setReasonSendFailed(
+              isEmpty(htmlEmailRequest.getReasonSendFailed()) ? unkMessage
+                  : htmlEmailRequest.getReasonSendFailed() + DOT + SPACE + unkMessage);
+          latch.countDown();
+        }
+      });
+    } catch (RejectedExecutionException exception) {
+      htmlEmailRequest.setSentTime(now());
+      htmlEmailRequest.setReasonSendFailed("Too many request to blas-email. Please try again.");
+      saveCentralizeLog(exception, htmlEmailRequest);
+      failedEmailList.add(htmlEmailRequest);
+      latch.countDown();
+    }
   }
 }

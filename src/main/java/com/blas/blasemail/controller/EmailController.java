@@ -98,7 +98,7 @@ public class EmailController {
     String fileReport = saveEmailLogFile(htmlEmailPayloadList, genFileReport);
 
     EmailLog emailLog = emailLogService.createEmailLog(
-        buildEmailLog(failedEmailList.size(), null, sentEmailList.size(), null));
+        buildEmailLog(failedEmailList.size(), failedEmailList, sentEmailList.size(), sentEmailList));
     log.info(
         String.format("Sent email - email_log_id: %s - fileReport: %s", emailLog.getEmailLogId(),
             fileReport));
