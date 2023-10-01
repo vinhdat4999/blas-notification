@@ -21,11 +21,12 @@ import jakarta.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import lombok.RequiredArgsConstructor;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.mail.MailProperties;
 import org.springframework.context.annotation.Lazy;
@@ -34,6 +35,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class Email {
 
   public static final String INTERNAL_SYSTEM_MSG = "Blas Email internal error";
@@ -49,36 +51,33 @@ public class Email {
   @Value("${blas.blas-email.waitTimeFirstTryToSendEmailAgain}")
   protected long waitTimeFirstTryToSendEmailAgain;
 
-  @Lazy
-  @Autowired
-  protected CentralizedLogService centralizedLogService;
-
-  @Lazy
-  @Autowired
-  protected JavaMailSender javaMailSender;
-
-  @Lazy
-  @Autowired
-  protected MailProperties mailProperties;
-
-  @Lazy
-  @Autowired
-  protected TemplateUtils templateUtils;
-
   @Value("${blas.service.serviceName}")
   private String serviceName;
 
   @Lazy
-  @Autowired
-  private Set<String> needFieldMasks;
+  protected final CentralizedLogService centralizedLogService;
 
-  protected void saveCentralizeLog(Exception e, Object object) {
-    centralizedLogService.saveLog(serviceName, ERROR, e.toString(),
-        e.getCause() == null ? EMPTY : e.getCause().toString(),
+  @Lazy
+  protected final JavaMailSender javaMailSender;
+
+  @Lazy
+  protected final MailProperties mailProperties;
+
+  @Lazy
+  protected final TemplateUtils templateUtils;
+
+  @Lazy
+  private final Set<String> needFieldMasks;
+
+  protected void saveCentralizeLog(Exception exception, Object object) {
+    centralizedLogService.saveLog(serviceName, ERROR, exception.toString(),
+        Optional.ofNullable(exception.getCause())
+            .map(Throwable::toString)
+            .orElse(EMPTY),
         maskJsonObjectWithFields(new JSONObject(javaMailSender), needFieldMasks).toString(),
         new JSONObject(object).toString(),
         maskJsonObjectWithFields(new JSONObject(mailProperties), needFieldMasks).toString(),
-        new JSONArray(e.getStackTrace()).toString(), isSendEmailAlert);
+        new JSONArray(exception.getStackTrace()).toString(), isSendEmailAlert);
   }
 
   protected boolean isInvalidReceiverEmail(EmailRequest emailRequest,

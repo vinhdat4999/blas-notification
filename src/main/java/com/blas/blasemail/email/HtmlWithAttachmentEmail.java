@@ -11,9 +11,11 @@ import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
+import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.enums.EmailTemplate;
 import com.blas.blascommon.payload.EmailRequest;
 import com.blas.blascommon.payload.HtmlEmailWithAttachmentRequest;
+import com.blas.blascommon.utils.TemplateUtils;
 import jakarta.activation.DataHandler;
 import jakarta.activation.DataSource;
 import jakarta.activation.FileDataSource;
@@ -27,23 +29,32 @@ import jakarta.mail.internet.MimeMultipart;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
+import org.springframework.boot.autoconfigure.mail.MailProperties;
 import org.springframework.data.util.Pair;
 import org.springframework.mail.MailException;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Slf4j
-@Async
 @Service
 public class HtmlWithAttachmentEmail extends Email {
 
   private static final String ADD_ATTACHMENT_FAILED_MSG = "Failed to add file attachment: %s";
   private static final String TEMP_ELM_PATH = "temp/";
+
+  public HtmlWithAttachmentEmail(
+      CentralizedLogService centralizedLogService,
+      JavaMailSender javaMailSender,
+      MailProperties mailProperties,
+      TemplateUtils templateUtils, Set<String> needFieldMasks) {
+    super(centralizedLogService, javaMailSender, mailProperties, templateUtils, needFieldMasks);
+  }
 
   private static void addAttachment(Multipart multipart, String filename, String filePath)
       throws MessagingException {

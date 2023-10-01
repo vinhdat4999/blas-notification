@@ -22,6 +22,8 @@ import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,14 +41,12 @@ public class HtmlEmailUsingInputFileController extends EmailController {
   private static final String COLUMN_EMAIL_TEMPLATE_NAME_TO_NOT_FOUND = "Column emailTemplateName not found";
   private static final String ALL_INPUT_RECORD_MUST_BE_SAME_EMAIL_TEMPLATE = "All input record must be same email template";
 
-  public HtmlEmailUsingInputFileController(
-      CentralizedLogService centralizedLogService,
-      HtmlWithAttachmentEmail htmlWithAttachmentEmail,
-      EmailLogService emailLogService,
-      HtmlEmail htmlEmail,
+  public HtmlEmailUsingInputFileController(CentralizedLogService centralizedLogService,
+      HtmlWithAttachmentEmail htmlWithAttachmentEmail, EmailLogService emailLogService,
+      JavaMailSender javaMailSender, ThreadPoolTaskExecutor taskExecutor, HtmlEmail htmlEmail,
       AuthUserService authUserService) {
-    super(centralizedLogService, htmlWithAttachmentEmail, emailLogService, htmlEmail,
-        authUserService);
+    super(centralizedLogService, htmlWithAttachmentEmail, emailLogService, javaMailSender,
+        taskExecutor, htmlEmail, authUserService);
   }
 
   @PostMapping(value = "/html-by-excel")
