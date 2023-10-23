@@ -3,7 +3,6 @@ package com.blas.blasemail.email;
 import static com.blas.blascommon.security.SecurityUtils.base64Decode;
 import static com.blas.blascommon.utils.IdUtils.genUUID;
 import static com.blas.blascommon.utils.StringUtils.DOT;
-import static com.blas.blascommon.utils.fileutils.FileUtils.delete;
 import static com.blas.blascommon.utils.fileutils.FileUtils.writeByteArrayToFile;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -27,6 +26,8 @@ import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -155,7 +156,7 @@ public class HtmlWithAttachmentEmail extends Email {
   private void deleteTempFileList(List<String> tempFileList) {
     tempFileList.forEach(tempFile -> {
       try {
-        delete(TEMP_ELM_PATH + tempFile);
+        Files.delete(Path.of(TEMP_ELM_PATH + tempFile));
       } catch (IOException e) {
         saveCentralizeLog(e, EMPTY);
       }
