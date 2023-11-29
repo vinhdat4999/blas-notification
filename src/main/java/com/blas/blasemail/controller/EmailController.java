@@ -54,6 +54,7 @@ public class EmailController {
   private static final String REASON_SEND_FAILED = "reasonSendFailed";
   private static final String STATUS_EMAIL = "statusEmail";
   private static final String SENT_TIME = "sentTime";
+  private static final String ADMIN = "admin";
   @Lazy
   protected final CentralizedLogService centralizedLogService;
   @Lazy
@@ -98,7 +99,8 @@ public class EmailController {
     String fileReport = saveEmailLogFile(htmlEmailPayloadList, genFileReport);
 
     EmailLog emailLog = emailLogService.createEmailLog(
-        buildEmailLog(failedEmailList.size(), failedEmailList, sentEmailList.size(), sentEmailList));
+        buildEmailLog(failedEmailList.size(), failedEmailList, sentEmailList.size(),
+            sentEmailList));
     log.info(
         String.format("Sent email - email_log_id: %s - fileReport: %s", emailLog.getEmailLogId(),
             fileReport));
@@ -114,7 +116,13 @@ public class EmailController {
 
   protected EmailLog buildEmailLog(int failedEmailNum, List<EmailRequest> failedEmailList,
       int sentEmailNum, List<EmailRequest> sentEmailList) {
-    AuthUser generatedBy = authUserService.getAuthUserByUsername(getUsernameLoggedIn());
+    String username;
+    try {
+      username = getUsernameLoggedIn();
+    } catch (Exception exception) {
+      username = ADMIN;
+    }
+    AuthUser generatedBy = authUserService.getAuthUserByUsername(username);
     return EmailLog.builder()
         .authUser(generatedBy)
         .timeLog(now())

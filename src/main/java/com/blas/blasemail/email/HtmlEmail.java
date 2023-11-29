@@ -69,7 +69,7 @@ public class HtmlEmail extends Email {
               EmailTemplate.valueOf(htmlEmailRequest.getEmailTemplateName()),
               htmlEmailRequest.getData());
           helper.setText(htmlContent, true);
-        javaMailSender.send(message);
+          javaMailSender.send(message);
           htmlEmailRequest.setStatus(STATUS_SUCCESS);
           sentEmailList.add(htmlEmailRequest);
           Metrics.counter("blas.blas-email.number-of-first-trying").increment();
