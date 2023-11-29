@@ -1,67 +1,97 @@
 package com.blas.blasemail.controller;
 
 import static com.blas.blascommon.constants.MessageTopic.BLAS_GROW_STATISTIC_TOPIC;
-import static com.blas.blascommon.constants.ResponseMessage.CANNOT_CONNECT_TO_HOST;
-import static com.blas.blascommon.constants.ResponseMessage.HTTP_STATUS_NOT_200;
-import static com.blas.blascommon.enums.LogType.ERROR;
-import static com.blas.blascommon.utils.httprequest.PostRequest.sendPostRequestWithJsonArrayPayload;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 
+import com.blas.blascommon.core.model.EmailLog;
+import com.blas.blascommon.core.service.AuthUserService;
 import com.blas.blascommon.core.service.CentralizedLogService;
+import com.blas.blascommon.core.service.EmailLogService;
+import com.blas.blascommon.deserializers.PairJsonDeserializer;
 import com.blas.blascommon.exceptions.types.BadRequestException;
-import com.blas.blascommon.exceptions.types.ServiceUnavailableException;
-import com.blas.blascommon.jwt.JwtTokenUtil;
-import com.blas.blascommon.payload.HttpResponse;
-import com.blas.blascommon.properties.BlasEmailConfiguration;
+import com.blas.blascommon.payload.EmailRequest;
+import com.blas.blascommon.payload.HtmlEmailWithAttachmentRequest;
+import com.blas.blasemail.email.HtmlEmail;
+import com.blas.blasemail.email.HtmlWithAttachmentEmail;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.hazelcast.collection.IQueue;
+import com.hazelcast.collection.ItemEvent;
+import com.hazelcast.collection.ItemListener;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.topic.ITopic;
-import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.http.HttpStatus;
+import org.json.JSONObject;
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.util.Pair;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class HazelcastMessageListener {
+public class HazelcastMessageListener extends EmailController {
 
-  @Value("${blas.service.serviceName}")
-  private String serviceName;
+  public HazelcastMessageListener(CentralizedLogService centralizedLogService,
+      HtmlWithAttachmentEmail htmlWithAttachmentEmail, EmailLogService emailLogService,
+      JavaMailSender javaMailSender, ThreadPoolTaskExecutor taskExecutor, HtmlEmail htmlEmail,
+      AuthUserService authUserService) {
+    super(centralizedLogService, htmlWithAttachmentEmail, emailLogService, javaMailSender,
+        taskExecutor, htmlEmail, authUserService);
+  }
 
-  @Lazy
-  private final CentralizedLogService centralizedLogService;
-
-  @Lazy
-  private final JwtTokenUtil jwtTokenUtil;
-
-  @Lazy
-  private final BlasEmailConfiguration blasEmailConfiguration;
-
-  public HazelcastMessageListener(HazelcastInstance hazelcastInstance,
-      CentralizedLogService centralizedLogService, JwtTokenUtil jwtTokenUtil,
-      BlasEmailConfiguration blasEmailConfiguration) {
-    this.centralizedLogService = centralizedLogService;
-    this.jwtTokenUtil = jwtTokenUtil;
-    this.blasEmailConfiguration = blasEmailConfiguration;
-    ITopic<String> topic = hazelcastInstance.getTopic(BLAS_GROW_STATISTIC_TOPIC);
-    topic.addMessageListener(message -> {
-      try {
-        HttpResponse response = sendPostRequestWithJsonArrayPayload(
-            this.blasEmailConfiguration.getEndpointHtmlEmailWithAttachments(), null,
-            this.jwtTokenUtil.generateInternalSystemToken(),
-            new JSONArray(message.getMessageObject()));
-        if (response.getStatusCode() != HttpStatus.OK.value()) {
-          throw new BadRequestException(HTTP_STATUS_NOT_200);
+  @Bean
+  public int emailQueueListener(HazelcastInstance hazelcastInstance)
+      throws JsonProcessingException {
+    IQueue<String> queue = hazelcastInstance.getQueue(BLAS_GROW_STATISTIC_TOPIC);
+    while (!queue.isEmpty()) {
+      sendEmail(queue.poll());
+    }
+    ItemListener<String> listener = new ItemListener<>() {
+      @Override
+      public void itemAdded(ItemEvent<String> itemEvent) {
+        try {
+          sendEmail(itemEvent.getItem());
+        } catch (JsonProcessingException exception) {
+          log.error(exception.toString());
         }
-      } catch (BadRequestException | IOException exception) {
-        this.centralizedLogService.saveLog(serviceName, ERROR, exception.toString(),
-            exception.getCause() == null ? EMPTY : exception.getCause().toString(),
-            message.getMessageObject(), null, null,
-            String.valueOf(new JSONArray(exception.getStackTrace())), false);
-        throw new ServiceUnavailableException(CANNOT_CONNECT_TO_HOST);
+        queue.poll();
       }
-    });
+
+      @Override
+      public void itemRemoved(ItemEvent<String> itemEvent) {
+        // no operation
+      }
+    };
+    queue.addItemListener(listener, true);
+    return 0;
+  }
+
+  private void sendEmail(String message) throws JsonProcessingException {
+    List<EmailRequest> sentEmailList = new CopyOnWriteArrayList<>();
+    List<EmailRequest> failedEmailList = new CopyOnWriteArrayList<>();
+    CountDownLatch latch = new CountDownLatch(1);
+    JSONObject obj = new JSONArray(message).getJSONObject(0);
+    SimpleModule module = new SimpleModule();
+    module.addDeserializer(Pair.class, new PairJsonDeserializer());
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.registerModule(module);
+    HtmlEmailWithAttachmentRequest request = mapper.readValue(obj.toString(),
+        HtmlEmailWithAttachmentRequest.class);
+    htmlWithAttachmentEmail.sendEmail(request, sentEmailList, failedEmailList, latch);
+    try {
+      latch.await();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new BadRequestException(INTERNAL_SYSTEM_ERROR_MSG);
+    }
+    EmailLog emailLog = emailLogService.createEmailLog(
+        buildEmailLog(failedEmailList.size(), failedEmailList, sentEmailList.size(),
+            sentEmailList));
+    log.info(String.format("Sent email - email_log_id: %s - fileReport: null",
+        emailLog.getEmailLogId()));
   }
 }

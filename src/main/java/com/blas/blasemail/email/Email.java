@@ -41,33 +41,24 @@ public class Email {
   public static final String INTERNAL_SYSTEM_MSG = "Blas Email internal error";
   protected static final String INVALID_EMAIL_MSG = "Invalid receiver email: %s";
   protected static final String INVALID_EMAIL_TEMPLATE = "Email template not found";
-
-  @Value("${blas.blas-idp.isSendEmailAlert}")
-  protected boolean isSendEmailAlert;
-
-  @Value("${blas.blas-email.numberTryToSendEmailAgain}")
-  protected int numberTryToSendEmailAgain;
-
-  @Value("${blas.blas-email.waitTimeFirstTryToSendEmailAgain}")
-  protected long waitTimeFirstTryToSendEmailAgain;
-
-  @Value("${blas.service.serviceName}")
-  private String serviceName;
-
   @Lazy
   protected final CentralizedLogService centralizedLogService;
-
   @Lazy
   protected final JavaMailSender javaMailSender;
-
   @Lazy
   protected final MailProperties mailProperties;
-
   @Lazy
   protected final TemplateUtils templateUtils;
-
   @Lazy
   private final Set<String> needFieldMasks;
+  @Value("${blas.blas-idp.isSendEmailAlert}")
+  protected boolean isSendEmailAlert;
+  @Value("${blas.blas-email.numberTryToSendEmailAgain}")
+  protected int numberTryToSendEmailAgain;
+  @Value("${blas.blas-email.waitTimeFirstTryToSendEmailAgain}")
+  protected long waitTimeFirstTryToSendEmailAgain;
+  @Value("${blas.service.serviceName}")
+  private String serviceName;
 
   protected void saveCentralizeLog(Exception exception, Object object) {
     centralizedLogService.saveLog(serviceName, ERROR, exception.toString(),

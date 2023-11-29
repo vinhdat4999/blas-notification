@@ -4,6 +4,7 @@ import com.blas.blascommon.jwt.JwtRequestFilter;
 import com.blas.blascommon.security.hash.Sha256Encoder;
 import com.blas.blasemail.properties.NeedMaskFieldProperties;
 import java.util.Set;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,12 +23,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class WebSecurityConfig {
 
-  @Bean
-  public Sha256Encoder passwordEncoder() {
-    return new Sha256Encoder();
-  }
+  private final Sha256Encoder sha256Encoder;
 
   @Bean
   public AuthenticationManager authenticationManager(HttpSecurity http,
@@ -35,7 +34,7 @@ public class WebSecurityConfig {
     AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(
         AuthenticationManagerBuilder.class);
     authenticationManagerBuilder.userDetailsService(jwtUserDetailsService)
-        .passwordEncoder(passwordEncoder());
+        .passwordEncoder(sha256Encoder);
     return authenticationManagerBuilder.build();
   }
 

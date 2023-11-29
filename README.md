@@ -4,6 +4,8 @@
 
 | Version | Date release | Tickets/Notes                                                       |
 |---------|--------------|---------------------------------------------------------------------|
+| 2.18.0  | 30/11/2023   | Upgrade spring boot 3.2.0                                           |
+| 2.17.0  | 24/10/2023   | Apply Hazelcast Queue                                               |
 | 2.16.0  | 01/10/2023   | Apply ThreadPoolExecutor                                            |
 | 2.15.0  | 22/09/2023   | Uptake blas-common 4.1.0                                            |
 | 2.14.0  | 08/09/2023   | Add new validation for send email using excel list data             |
