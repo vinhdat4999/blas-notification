@@ -9,10 +9,10 @@ spring:
   task:
     execution:
       pool:
-        core-size: 10
-        max-size: 50
+        core-size: 100
+        max-size: 150
         queue-capacity: 10000
-        keep-alive: 10s
+        keep-alive: 5s
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/blas
@@ -58,8 +58,10 @@ blas:
     numberTryToSendEmailAgain: 9
     waitTimeFirstTryToSendEmailAgain: 1000 #miliseconds
     needMaskFields: password
+    endpointHtmlEmail: http://localhost:8082/send-email/html
+    endpointHtmlEmailWithAttachments: http://localhost:8082/send-email/html-with-attachment
   blas-idp:
-    isSendEmailAlert: true
+    isSendEmailAlert: false
     jwt:
       timeToExpiredInternalToken: 120 #2 minutes
 #logging:
