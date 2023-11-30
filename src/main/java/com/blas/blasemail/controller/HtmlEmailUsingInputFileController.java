@@ -42,11 +42,12 @@ public class HtmlEmailUsingInputFileController extends EmailController {
   private static final String ALL_INPUT_RECORD_MUST_BE_SAME_EMAIL_TEMPLATE = "All input record must be same email template";
 
   public HtmlEmailUsingInputFileController(CentralizedLogService centralizedLogService,
-      HtmlWithAttachmentEmail htmlWithAttachmentEmail, EmailLogService emailLogService,
-      JavaMailSender javaMailSender, ThreadPoolTaskExecutor taskExecutor, HtmlEmail htmlEmail,
-      AuthUserService authUserService) {
-    super(centralizedLogService, htmlWithAttachmentEmail, emailLogService, javaMailSender,
-        taskExecutor, htmlEmail, authUserService);
+      HtmlEmail htmlEmail, HtmlWithAttachmentEmail htmlWithAttachmentEmail,
+      EmailLogService emailLogService, JavaMailSender javaMailSender,
+      ThreadPoolTaskExecutor taskExecutor, AuthUserService authUserService) {
+    super(centralizedLogService, htmlEmail, htmlWithAttachmentEmail, emailLogService,
+        javaMailSender,
+        taskExecutor, authUserService);
   }
 
   @PostMapping(value = "/html-by-excel")
