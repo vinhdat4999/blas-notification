@@ -58,6 +58,8 @@ public class EmailController {
   @Lazy
   protected final CentralizedLogService centralizedLogService;
   @Lazy
+  protected final HtmlEmail htmlEmail;
+  @Lazy
   protected final HtmlWithAttachmentEmail htmlWithAttachmentEmail;
   @Lazy
   protected final EmailLogService emailLogService;
@@ -65,8 +67,6 @@ public class EmailController {
   protected final JavaMailSender javaMailSender;
   @Lazy
   protected final ThreadPoolTaskExecutor taskExecutor;
-  @Lazy
-  private final HtmlEmail htmlEmail;
   @Lazy
   private final AuthUserService authUserService;
   @Value("${blas.blas-idp.isSendEmailAlert}")
@@ -90,10 +90,10 @@ public class EmailController {
     }
     try {
       latch.await();
-    } catch (InterruptedException e) {
-      saveCentralizedLog(e, authentication, htmlEmailPayloadList);
+    } catch (InterruptedException exception) {
+      saveCentralizedLog(exception, authentication, htmlEmailPayloadList);
       Thread.currentThread().interrupt();
-      throw new BadRequestException(INTERNAL_SYSTEM_ERROR_MSG);
+      throw new BadRequestException(INTERNAL_SYSTEM_ERROR_MSG, exception);
     }
 
     String fileReport = saveEmailLogFile(htmlEmailPayloadList, genFileReport);

@@ -31,11 +31,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class HtmlEmailWithAttachmentController extends EmailController {
 
   public HtmlEmailWithAttachmentController(CentralizedLogService centralizedLogService,
-      HtmlWithAttachmentEmail htmlWithAttachmentEmail, EmailLogService emailLogService,
-      JavaMailSender javaMailSender, ThreadPoolTaskExecutor taskExecutor, HtmlEmail htmlEmail,
-      AuthUserService authUserService) {
-    super(centralizedLogService, htmlWithAttachmentEmail, emailLogService, javaMailSender,
-        taskExecutor, htmlEmail, authUserService);
+      HtmlEmail htmlEmail, HtmlWithAttachmentEmail htmlWithAttachmentEmail,
+      EmailLogService emailLogService, JavaMailSender javaMailSender,
+      ThreadPoolTaskExecutor taskExecutor, AuthUserService authUserService) {
+    super(centralizedLogService, htmlEmail, htmlWithAttachmentEmail, emailLogService,
+        javaMailSender,
+        taskExecutor, authUserService);
   }
 
   @PostMapping(value = "/html-with-attachment")
@@ -51,10 +52,10 @@ public class HtmlEmailWithAttachmentController extends EmailController {
         email -> htmlWithAttachmentEmail.sendEmail(email, sentEmailList, failedEmailList, latch));
     try {
       latch.await();
-    } catch (InterruptedException e) {
-      saveCentralizedLog(e, authentication, htmlEmailWithAttachmentRequestPayloadList);
+    } catch (InterruptedException exception) {
+      saveCentralizedLog(exception, authentication, htmlEmailWithAttachmentRequestPayloadList);
       Thread.currentThread().interrupt();
-      throw new BadRequestException(INTERNAL_SYSTEM_ERROR_MSG);
+      throw new BadRequestException(INTERNAL_SYSTEM_ERROR_MSG, exception);
     }
     EmailLog emailLog = emailLogService.createEmailLog(
         buildEmailLog(failedEmailList.size(), failedEmailList, sentEmailList.size(),

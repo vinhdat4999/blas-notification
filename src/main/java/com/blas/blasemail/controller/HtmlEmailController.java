@@ -24,12 +24,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(value = "/send-email")
 public class HtmlEmailController extends EmailController {
 
-  public HtmlEmailController(CentralizedLogService centralizedLogService,
+  public HtmlEmailController(CentralizedLogService centralizedLogService, HtmlEmail htmlEmail,
       HtmlWithAttachmentEmail htmlWithAttachmentEmail, EmailLogService emailLogService,
-      JavaMailSender javaMailSender, ThreadPoolTaskExecutor taskExecutor, HtmlEmail htmlEmail,
+      JavaMailSender javaMailSender, ThreadPoolTaskExecutor taskExecutor,
       AuthUserService authUserService) {
-    super(centralizedLogService, htmlWithAttachmentEmail, emailLogService, javaMailSender,
-        taskExecutor, htmlEmail, authUserService);
+    super(centralizedLogService, htmlEmail, htmlWithAttachmentEmail, emailLogService,
+        javaMailSender,
+        taskExecutor, authUserService);
   }
 
   @PostMapping(value = "/html")
