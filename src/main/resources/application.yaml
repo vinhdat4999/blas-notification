@@ -58,8 +58,6 @@ blas:
     numberTryToSendEmailAgain: 9
     waitTimeFirstTryToSendEmailAgain: 1000 #miliseconds
     needMaskFields: password
-    endpointHtmlEmail: http://localhost:8082/send-email/html
-    endpointHtmlEmailWithAttachments: http://localhost:8082/send-email/html-with-attachment
   blas-idp:
     isSendEmailAlert: false
     jwt:
