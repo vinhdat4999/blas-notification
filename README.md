@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                                                       |
 |---------|--------------|---------------------------------------------------------------------|
+| 2.19.0  | 06/12/2023   | Support Github Packages Maven Repository                            |
 | 2.18.0  | 01/12/2023   | Upgrade spring boot 3.2.0                                           |
 | 2.17.0  | 24/10/2023   | Apply Hazelcast Queue                                               |
 | 2.16.0  | 01/10/2023   | Apply ThreadPoolExecutor                                            |
