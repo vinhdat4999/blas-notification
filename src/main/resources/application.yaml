@@ -17,12 +17,15 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/blas
     username: root
-    password:
+    password: 123456
   jpa:
     hibernate:
       ddl-auto: none
     open-in-view: false
     show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
   mail:
     host: smtp.gmail.com
     port: 465
