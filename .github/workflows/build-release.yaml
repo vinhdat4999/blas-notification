@@ -1,8 +1,7 @@
 name: build and release
 
 on:
-  #  push:
-  pull_request:
+  push:
     branches: [ main ]
 
 jobs:
@@ -28,6 +27,14 @@ jobs:
           sudo dpkg --configure -a
           sudo apt-get update
           sudo apt-get install libxml2-utils
+
+      - name: Extract service name pom.xml
+        id: extractName
+        run: |
+          serviceName=$(xmllint --xpath '/*[local-name()="project"]/*[local-name()="artifactId"]/text()' pom.xml)
+          echo "serviceName=$serviceName"
+          echo "serviceName=$serviceName" >> $GITHUB_OUTPUT
+
       - name: Extract release version from pom.xml
         id: extractVersion
         run: |
@@ -48,11 +55,11 @@ jobs:
           GITHUB_ACTOR: ${{ env.GITHUB_ACTOR }}
           GITHUB_TOKEN: ${{ secrets.PACKAGE }}
 
-      - name: Publish to GitHub Packages Apache Maven
-        run: mvn deploy
-        env:
-          GITHUB_ACTOR: ${{ env.GITHUB_ACTOR }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #      - name: Publish to GitHub Packages Apache Maven
+      #        run: mvn deploy
+      #        env:
+      #          GITHUB_ACTOR: ${{ env.GITHUB_ACTOR }}
+      #          GITHUB_TOKEN: ${{ secrets.PACKAGE }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -69,7 +76,7 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/blas-email:${{ steps.extractVersion.outputs.serviceVersion }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ steps.extractName.outputs.serviceName }}:${{ steps.extractVersion.outputs.serviceVersion }}
 
       - name: Logout from Docker Hub
         run: docker logout
