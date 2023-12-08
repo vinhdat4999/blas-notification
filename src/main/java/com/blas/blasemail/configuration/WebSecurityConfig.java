@@ -44,7 +44,7 @@ public class WebSecurityConfig {
     return http
         .csrf(AbstractHttpConfigurer::disable)
         .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
-        .authorizeHttpRequests(authorize -> authorize
+        .authorizeHttpRequests(authorize -> authorize.requestMatchers("/actuator/**").permitAll()
             .anyRequest().authenticated())
         .headers(headers -> headers.frameOptions(FrameOptionsConfig::sameOrigin))
         .build();
