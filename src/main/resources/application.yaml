@@ -30,9 +30,6 @@ spring:
     host: smtp.gmail.com
     port: 465
     username: blasvietnam@gmail.com
-    password: pdaifcxvnvsqyums
-#    username: blassystemvietnam@gmail.com
-#    password: gcfeqaxvdfafgxoc
     properties:
       mail:
         smtp:

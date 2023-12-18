@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                                                       |
 |---------|--------------|---------------------------------------------------------------------|
+| 2.21.0  | 18/12/2023   | Uptake blas-common 4.7.0                                            |
 | 2.20.0  | 08/12/2023   | Support Micrometer Prometheus metrics                               |
 | 2.19.0  | 06/12/2023   | Support Github Packages Maven Repository                            |
 | 2.18.0  | 01/12/2023   | Upgrade spring boot 3.2.0                                           |
