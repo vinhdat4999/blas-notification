@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                                                       |
 |---------|--------------|---------------------------------------------------------------------|
+| 2.22.0  | 31/12/2023   | Uptake blas-common 4.8.0                                            |
 | 2.21.0  | 18/12/2023   | Uptake blas-common 4.7.0                                            |
 | 2.20.0  | 08/12/2023   | Support Micrometer Prometheus metrics                               |
 | 2.19.0  | 06/12/2023   | Support Github Packages Maven Repository                            |
