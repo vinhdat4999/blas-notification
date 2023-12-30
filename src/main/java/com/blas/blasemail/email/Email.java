@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -90,15 +91,19 @@ public class Email {
       try {
         long waitTime = (long) (waitTimeFirstTryToSendEmailAgain
             + waitTimeFirstTryToSendEmailAgain * (attempts - 1) * 0.5);
-        Thread.sleep(waitTime);
+        TimeUnit.MILLISECONDS.sleep(waitTime);
         javaMailSender.send(message);
         sentEmailList.add(emailRequest);
         emailRequest.setStatus(STATUS_SUCCESS);
         emailRequest.setSentTime(now());
         return;
-      } catch (MailException | InterruptedException retryException) {
+      } catch (MailException mailException) {
+        exception = mailException;
+        attempts++;
+      } catch (InterruptedException retryException) {
         exception = retryException;
         attempts++;
+        Thread.currentThread().interrupt();
       }
     }
     emailRequest.setReasonSendFailed(INTERNAL_SYSTEM_MSG);

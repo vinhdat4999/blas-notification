@@ -55,6 +55,7 @@ public class HtmlEmail extends Email {
           Thread.sleep(100);
         } catch (InterruptedException exception) {
           log.error(exception.toString());
+          Thread.currentThread().interrupt();
         }
         if (isBlank(htmlEmailRequest.getEmailTemplateName())) {
           saveCentralizeLog(new NullPointerException(INVALID_EMAIL_TEMPLATE), htmlEmailRequest);
