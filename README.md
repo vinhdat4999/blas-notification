@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                                                       |
 |---------|--------------|---------------------------------------------------------------------|
+| 2.23.0  | 01/01/2024   | Add time zone configuration and PDF password                        |
 | 2.22.0  | 31/12/2023   | Uptake blas-common 4.8.0                                            |
 | 2.21.0  | 18/12/2023   | Uptake blas-common 4.7.0                                            |
 | 2.20.0  | 08/12/2023   | Support Micrometer Prometheus metrics                               |
