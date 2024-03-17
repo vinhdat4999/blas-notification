@@ -55,24 +55,34 @@ public class EmailController {
   private static final String STATUS_EMAIL = "statusEmail";
   private static final String SENT_TIME = "sentTime";
   private static final String ADMIN = "admin";
+
   @Lazy
   protected final CentralizedLogService centralizedLogService;
+
   @Lazy
   protected final HtmlEmail htmlEmail;
+
   @Lazy
   protected final HtmlWithAttachmentEmail htmlWithAttachmentEmail;
+
   @Lazy
   protected final EmailLogService emailLogService;
+
   @Lazy
   protected final JavaMailSender javaMailSender;
+
   @Lazy
   protected final ThreadPoolTaskExecutor taskExecutor;
+
   @Lazy
   private final AuthUserService authUserService;
+
   @Value("${blas.blas-idp.isSendEmailAlert}")
   protected boolean isSendEmailAlert;
+
   @Value("${blas.service.serviceName}")
   private String serviceName;
+
   @Value("${blas.blas-email.dailyQuotaNormalUser}")
   private int dailyQuotaNormalUser;
 
