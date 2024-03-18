@@ -1,7 +1,6 @@
 package com.blas.blasemail.controller;
 
 import static com.blas.blascommon.enums.FileType.XLSX;
-import static com.blas.blascommon.enums.LogType.ERROR;
 import static com.blas.blascommon.security.SecurityUtils.getUserIdLoggedIn;
 import static com.blas.blascommon.security.SecurityUtils.getUsernameLoggedIn;
 import static com.blas.blascommon.security.SecurityUtils.isPrioritizedRole;
@@ -9,7 +8,6 @@ import static com.blas.blascommon.utils.StringUtils.DOT;
 import static com.blas.blascommon.utils.fileutils.exportfile.Excel.exportToExcel;
 import static java.lang.System.currentTimeMillis;
 import static java.time.LocalDateTime.now;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import com.blas.blascommon.core.model.AuthUser;
 import com.blas.blascommon.core.model.EmailLog;
@@ -152,12 +150,9 @@ public class EmailController {
     }
   }
 
-  protected void saveCentralizedLog(InterruptedException e, Authentication authentication,
+  protected void saveCentralizedLog(InterruptedException exception, Authentication authentication,
       List<? extends EmailRequest> emailRequestList) {
-    centralizedLogService.saveLog(serviceName, ERROR, e.toString(),
-        e.getCause() == null ? EMPTY : e.getCause().toString(),
-        new JSONArray(emailRequestList).toString(), "User: " + authentication.getName(), null,
-        new JSONArray(e.getStackTrace()).toString(), isSendEmailAlert);
+    centralizedLogService.saveLog(exception, authentication.getName(), emailRequestList, null);
   }
 
   private String saveEmailLogFile(List<HtmlEmailRequest> htmlEmailPayloadList,
