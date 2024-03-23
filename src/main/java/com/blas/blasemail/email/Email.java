@@ -1,6 +1,5 @@
 package com.blas.blasemail.email;
 
-import static com.blas.blascommon.enums.LogType.ERROR;
 import static com.blas.blascommon.exceptions.BlasErrorCodeEnum.MSG_FORMATTING_ERROR;
 import static com.blas.blascommon.utils.JsonUtils.maskJsonObjectWithFields;
 import static com.blas.blascommon.utils.StringUtils.COMMA;
@@ -21,12 +20,10 @@ import jakarta.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.mail.MailProperties;
@@ -42,34 +39,35 @@ public class Email {
   public static final String INTERNAL_SYSTEM_MSG = "Blas Email internal error";
   protected static final String INVALID_EMAIL_MSG = "Invalid receiver email: %s";
   protected static final String INVALID_EMAIL_TEMPLATE = "Email template not found";
+
   @Lazy
   protected final CentralizedLogService centralizedLogService;
+
   @Lazy
   protected final JavaMailSender javaMailSender;
+
   @Lazy
   protected final MailProperties mailProperties;
+
   @Lazy
   protected final TemplateUtils templateUtils;
+
   @Lazy
   private final Set<String> needFieldMasks;
+
   @Value("${blas.blas-idp.isSendEmailAlert}")
   protected boolean isSendEmailAlert;
+
   @Value("${blas.blas-email.numberTryToSendEmailAgain}")
   protected int numberTryToSendEmailAgain;
+
   @Value("${blas.blas-email.waitTimeFirstTryToSendEmailAgain}")
   protected long waitTimeFirstTryToSendEmailAgain;
-  @Value("${blas.service.serviceName}")
-  private String serviceName;
 
   protected void saveCentralizeLog(Exception exception, Object object) {
-    centralizedLogService.saveLog(serviceName, ERROR, exception.toString(),
-        Optional.ofNullable(exception.getCause())
-            .map(Throwable::toString)
-            .orElse(EMPTY),
-        maskJsonObjectWithFields(new JSONObject(javaMailSender), needFieldMasks).toString(),
-        new JSONObject(object).toString(),
-        maskJsonObjectWithFields(new JSONObject(mailProperties), needFieldMasks).toString(),
-        new JSONArray(exception.getStackTrace()).toString(), isSendEmailAlert);
+    centralizedLogService.saveLog(exception,
+        maskJsonObjectWithFields(new JSONObject(javaMailSender), needFieldMasks), object,
+        maskJsonObjectWithFields(new JSONObject(mailProperties), needFieldMasks));
   }
 
   protected boolean isInvalidReceiverEmail(EmailRequest emailRequest,
