@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                                                       |
 |---------|--------------|---------------------------------------------------------------------|
+| 2.26.0  | 23/03/2024   | Upgrade Java 21                                                     |
 | 2.25.0  | 23/03/2024   | Uptake blas-common 5.1.0                                            |
 | 2.24.0  | 18/03/2024   | Uptake blas-bom 1.16.0 and blas-common 5.0.0                        |
 | 2.23.0  | 01/01/2024   | Add time zone configuration and PDF password                        |
