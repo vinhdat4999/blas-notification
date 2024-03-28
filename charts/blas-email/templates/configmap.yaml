@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: server-config
+data:
+  application.yaml: |
+    server:
+      port: 8082
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: "*"
+      endpoint:
+        health:
+          probes:
+            enabled: true
+    spring:
+      task:
+        execution:
+          pool:
+            core-size: 50
+            max-size: 150
+            queue-capacity: 10000
+            keep-alive: 5s
+      datasource:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://blasdatabase.mysql.database.azure.com/blas
+        username: blas
+        password: 0546550566Qq@#
+      data:
+        mongodb:
+          uri: mongodb+srv://vinhdat4999:hpDOksLujqSukEbt@blas.ofn7pbk.mongodb.net/blas
+      jpa:
+        hibernate:
+          ddl-auto: none
+        open-in-view: false
+        show-sql: false
+        properties:
+          hibernate:
+            dialect: org.hibernate.dialect.MySQL8Dialect
+      mail:
+        host: smtp.gmail.com
+        port: 465
+        username: blasvietnam@gmail.com
+        properties:
+          mail:
+            smtp:
+              auth: true
+              starttls:
+                enable: true
+                required: true
+              ssl:
+                protocols: TLSv1.3
+                checkserveridentity: true
+              socketFactory:
+                class: javax.net.ssl.SSLSocketFactory
+    blas:
+      aliasBlasPrivateKey: blasSecretKey
+      certificate: BlasSecretKey.p12
+      service:
+        serviceName: blas-email
+      gate-interceptor:
+        enableLogRequest: true
+        enableLogLocalRequest: false
+      blas-service-support:
+        throughServiceSupport: true
+        endpointCheckMaintenance: http://localhost:8084/maintenance/check
+      blas-email:
+        dailyQuotaNormalUser: 10
+        numberTryToSendEmailAgain: 9
+        waitTimeFirstTryToSendEmailAgain: 1000 #miliseconds
+        needMaskFields: password
+      blas-idp:
+        isSendEmailAlert: false
+        jwt:
+          timeToExpiredInternalToken: 120 #2 minutes
+    #logging:
+    #  file:
+    #    name: application.log
+    #  level:
+    #    root: DEBUG
+    #    org.springframework: DEBUG
+    #    com.blas.blasemail: DEBUG
