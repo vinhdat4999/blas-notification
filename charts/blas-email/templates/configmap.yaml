@@ -6,23 +6,7 @@ data:
   application.yaml: |
     server:
       port: 8082
-    management:
-      endpoints:
-        web:
-          exposure:
-            include: "*"
-      endpoint:
-        health:
-          probes:
-            enabled: true
     spring:
-      task:
-        execution:
-          pool:
-            core-size: 50
-            max-size: 150
-            queue-capacity: 10000
-            keep-alive: 5s
       datasource:
         driver-class-name: com.mysql.cj.jdbc.Driver
         url: jdbc:mysql://blas.mysql.database.azure.com/blas
@@ -39,22 +23,31 @@ data:
         properties:
           hibernate:
             dialect: org.hibernate.dialect.MySQL8Dialect
-      mail:
-        host: smtp.gmail.com
-        port: 465
-        username: blasvietnam@gmail.com
-        properties:
-          mail:
-            smtp:
-              auth: true
-              starttls:
-                enable: true
-                required: true
-              ssl:
-                protocols: TLSv1.3
-                checkserveridentity: true
-              socketFactory:
-                class: javax.net.ssl.SSLSocketFactory
+      security:
+        oauth2:
+          client:
+            registration:
+              google:
+                clientId: 907490346247-lg1pq3fd2j79jl6gd0o54btqnm25l203.apps.googleusercontent.com
+                clientSecret: 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
+                scope:
+                  - email
+                  - profile
+              facebook:
+                clientId: 1483809445791923
+                clientSecret: cf95985be987f1ac3459bb4710e32fec
+                scope:
+                  - email
+                  - public_profile
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: "*"
+      endpoint:
+        health:
+          probes:
+            enabled: true
     blas:
       aliasBlasPrivateKey: blasSecretKey
       certificate: BlasSecretKey.p12
@@ -66,31 +59,23 @@ data:
       blas-service-support:
         throughServiceSupport: true
         endpointCheckMaintenance: http://blas-service-support.dev.svc.cluster.local/maintenance/check
-      blas-email:
-        dailyQuotaNormalUser: 10
-        numberTryToSendEmailAgain: 9
-        waitTimeFirstTryToSendEmailAgain: 1000 #miliseconds
-        needMaskFields: password
       blas-idp:
-        isSendEmailAlert: false
+        isSendEmailAlert: true
         jwt:
+          timeToExpired: 8640000 #100 days
           timeToExpiredInternalToken: 120 #2 minutes
+      hazelcast:
+        aksNamespace: {{.Values.aksNamespace}}
+        hazelcastService: {{.Values.hazelcastService}}
 
     logging:
       level:
-        root: INFO
-        com.blas: DEBUG
-        org.hibernate: WARN
-        com.azure: WARN
-        io.micrometer: WARN
-        com.hazelcast: DEBUG
-        org.mongodb: WARN
-        org.springframework: WARN
-        org.apache.http: WARN
+{{- range $key, $value := index .Values "service-config" "logging" "level" }}
+        {{$key}}: {{$value}}
+{{- end }}
 
   hazelcast-client.yaml: |-
     hazelcast-client:
       network:
         kubernetes:
           enabled: {{ index .Values "service-config" "hazelcast-client" "network" "kubernetes" "enabled" }}
-

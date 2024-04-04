@@ -4,7 +4,6 @@ metadata:
   name: {{ include "blas-email.fullname" . }}
   labels:
     {{- include "blas-email.labels" . | nindent 4 }}
-    hazelcast: blas-hazelcast
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
@@ -23,7 +22,7 @@ spec:
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        hazelcast: blas-hazelcast
+        hazelcast: {{.Values.hazelcastService}}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:

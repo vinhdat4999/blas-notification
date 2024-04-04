@@ -69,6 +69,9 @@ blas:
     isSendEmailAlert: false
     jwt:
       timeToExpiredInternalToken: 120 #2 minutes
+  hazelcast:
+    aksNamespace: dev
+    hazelcastService: hazelcast
 
 logging:
   level:
