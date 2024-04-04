@@ -4,6 +4,7 @@ metadata:
   name: {{ include "blas-email.fullname" . }}
   labels:
     {{- include "blas-email.labels" . | nindent 4 }}
+    hazelcast: blas-hazelcast
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
@@ -22,6 +23,7 @@ spec:
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
+        hazelcast: blas-hazelcast
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -40,6 +42,8 @@ spec:
             - name: http
               containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
+            - name: multicast
+              containerPort: 5701
           startupProbe:
             httpGet:
               path: /actuator/health/readiness
