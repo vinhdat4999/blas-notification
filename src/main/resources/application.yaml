@@ -10,6 +10,8 @@ management:
       probes:
         enabled: true
 spring:
+  profiles:
+    active: local
   task:
     execution:
       pool:
