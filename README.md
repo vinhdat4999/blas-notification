@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                                                       |
 |---------|--------------|---------------------------------------------------------------------|
+| 2.27.0  | 05/04/2024   | Uptake blas-bom 1.18.0 and blas-common 5.3.0                        |
 | 2.26.0  | 23/03/2024   | Upgrade Java 21                                                     |
 | 2.25.0  | 23/03/2024   | Uptake blas-common 5.1.0                                            |
 | 2.24.0  | 18/03/2024   | Uptake blas-bom 1.16.0 and blas-common 5.0.0                        |

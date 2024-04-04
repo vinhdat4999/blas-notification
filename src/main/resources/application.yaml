@@ -69,10 +69,15 @@ blas:
     isSendEmailAlert: false
     jwt:
       timeToExpiredInternalToken: 120 #2 minutes
-#logging:
-#  file:
-#    name: application.log
-#  level:
-#    root: DEBUG
-#    org.springframework: DEBUG
-#    com.blas.blasemail: DEBUG
+
+logging:
+  level:
+    root: INFO
+    com.blas: DEBUG
+    org.hibernate: WARN
+    com.azure: WARN
+    io.micrometer: WARN
+    com.hazelcast: WARN
+    org.mongodb: WARN
+    org.springframework: WARN
+    org.apache.http: WARN

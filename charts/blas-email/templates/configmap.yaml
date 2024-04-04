@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: server-config
+  name: {{.Chart.Name}}-service-config
 data:
   application.yaml: |
     server:
@@ -25,7 +25,7 @@ data:
             keep-alive: 5s
       datasource:
         driver-class-name: com.mysql.cj.jdbc.Driver
-        url: jdbc:mysql://blasdatabase.mysql.database.azure.com/blas
+        url: jdbc:mysql://blas.mysql.database.azure.com/blas
         username: blas
         password: 0546550566Qq@#
       data:
@@ -65,7 +65,7 @@ data:
         enableLogLocalRequest: false
       blas-service-support:
         throughServiceSupport: true
-        endpointCheckMaintenance: http://localhost:8084/maintenance/check
+        endpointCheckMaintenance: http://blas-service-support.dev.svc.cluster.local/maintenance/check
       blas-email:
         dailyQuotaNormalUser: 10
         numberTryToSendEmailAgain: 9
@@ -75,10 +75,22 @@ data:
         isSendEmailAlert: false
         jwt:
           timeToExpiredInternalToken: 120 #2 minutes
-    #logging:
-    #  file:
-    #    name: application.log
-    #  level:
-    #    root: DEBUG
-    #    org.springframework: DEBUG
-    #    com.blas.blasemail: DEBUG
+
+    logging:
+      level:
+        root: INFO
+        com.blas: DEBUG
+        org.hibernate: WARN
+        com.azure: WARN
+        io.micrometer: WARN
+        com.hazelcast: DEBUG
+        org.mongodb: WARN
+        org.springframework: WARN
+        org.apache.http: WARN
+
+  hazelcast-client.yaml: |-
+    hazelcast-client:
+      network:
+        kubernetes:
+          enabled: {{ index .Values "service-config" "hazelcast-client" "network" "kubernetes" "enabled" }}
+
