@@ -19,9 +19,9 @@ spring:
         keep-alive: 5s
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://blasdatabase.mysql.database.azure.com/blas
-    username: blas
-    password: 0546550566Qq@#
+    url: jdbc:mysql://localhost:3306/blas
+    username: root
+    password: 123456
   data:
     mongodb:
       uri: mongodb+srv://vinhdat4999:hpDOksLujqSukEbt@blas.ofn7pbk.mongodb.net/blas
