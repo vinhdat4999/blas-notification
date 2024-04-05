@@ -2,7 +2,7 @@ name: build and release
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
 
 jobs:
   build-and-release:
@@ -54,12 +54,6 @@ jobs:
         env:
           GITHUB_ACTOR: ${{ env.GITHUB_ACTOR }}
           GITHUB_TOKEN: ${{ secrets.PACKAGE }}
-
-      #      - name: Publish to GitHub Packages Apache Maven
-      #        run: mvn deploy
-      #        env:
-      #          GITHUB_ACTOR: ${{ env.GITHUB_ACTOR }}
-      #          GITHUB_TOKEN: ${{ secrets.PACKAGE }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2

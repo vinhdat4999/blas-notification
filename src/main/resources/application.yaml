@@ -10,6 +10,8 @@ management:
       probes:
         enabled: true
 spring:
+  profiles:
+    active: local
   task:
     execution:
       pool:
@@ -22,6 +24,9 @@ spring:
     url: jdbc:mysql://localhost:3306/blas
     username: root
     password: 123456
+  data:
+    mongodb:
+      uri: mongodb+srv://vinhdat4999:hpDOksLujqSukEbt@blas.ofn7pbk.mongodb.net/blas
   jpa:
     hibernate:
       ddl-auto: none
@@ -30,9 +35,6 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
-  data:
-    mongodb:
-      uri: mongodb://localhost:27017/blas
   mail:
     host: smtp.gmail.com
     port: 465
@@ -69,10 +71,18 @@ blas:
     isSendEmailAlert: false
     jwt:
       timeToExpiredInternalToken: 120 #2 minutes
-#logging:
-#  file:
-#    name: application.log
-#  level:
-#    root: DEBUG
-#    org.springframework: DEBUG
-#    com.blas.blasemail: DEBUG
+  hazelcast:
+    aksNamespace: dev
+    hazelcastService: hazelcast
+
+logging:
+  level:
+    root: INFO
+    com.blas: DEBUG
+    org.hibernate: WARN
+    com.azure: WARN
+    io.micrometer: WARN
+    com.hazelcast: WARN
+    org.mongodb: WARN
+    org.springframework: WARN
+    org.apache.http: WARN
