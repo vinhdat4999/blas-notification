@@ -55,9 +55,6 @@ data:
       certificate: BlasSecretKey.p12
       service:
         serviceName: blas-email
-      gate-interceptor:
-        enableLogRequest: true
-        enableLogLocalRequest: false
       blas-service-support:
         throughServiceSupport: true
         endpointCheckMaintenance: http://blas-service-support.dev.svc.cluster.local/maintenance/check

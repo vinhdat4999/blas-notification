@@ -1,5 +1,6 @@
 package com.blas.blasemail.controller;
 
+import static com.blas.blascommon.constants.MDCConstant.GLOBAL_ID;
 import static com.blas.blascommon.enums.FileType.XLSX;
 import static com.blas.blascommon.security.SecurityUtils.getUserIdLoggedIn;
 import static com.blas.blascommon.security.SecurityUtils.getUsernameLoggedIn;
@@ -27,9 +28,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
@@ -77,9 +80,6 @@ public class EmailController {
 
   @Value("${blas.blas-idp.isSendEmailAlert}")
   protected boolean isSendEmailAlert;
-
-  @Value("${blas.service.serviceName}")
-  private String serviceName;
 
   @Value("${blas.blas-email.dailyQuotaNormalUser}")
   private int dailyQuotaNormalUser;
@@ -132,6 +132,7 @@ public class EmailController {
     }
     AuthUser generatedBy = authUserService.getAuthUserByUsername(username);
     return EmailLog.builder()
+        .globalId(MDC.get(GLOBAL_ID))
         .authUser(generatedBy)
         .timeLog(now())
         .failedEmailNum(failedEmailNum)

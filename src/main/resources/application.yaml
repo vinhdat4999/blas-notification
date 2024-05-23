@@ -15,9 +15,9 @@ spring:
   task:
     execution:
       pool:
-        core-size: 50
-        max-size: 150
-        queue-capacity: 10000
+        core-size: 5
+        max-size: 10
+        queue-capacity: 1000000
         keep-alive: 5s
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -56,9 +56,6 @@ blas:
   certificate: BlasSecretKey.p12
   service:
     serviceName: blas-email
-  gate-interceptor:
-    enableLogRequest: true
-    enableLogLocalRequest: false
   blas-service-support:
     throughServiceSupport: true
     endpointCheckMaintenance: http://localhost:8084/maintenance/check
@@ -68,9 +65,7 @@ blas:
     waitTimeFirstTryToSendEmailAgain: 1000 #miliseconds
     needMaskFields: password
   blas-idp:
-    isSendEmailAlert: false
-    jwt:
-      timeToExpiredInternalToken: 120 #2 minutes
+    isSendEmailAlert: true
   hazelcast:
     aksNamespace: dev
     hazelcastService: hazelcast
