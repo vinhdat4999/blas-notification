@@ -6,7 +6,7 @@ import static com.blas.blascommon.security.SecurityUtils.getPrivateKeyAesFromCer
 
 import com.blas.blascommon.configurations.CertPasswordConfiguration;
 import com.blas.blascommon.core.service.BlasConfigService;
-import com.blas.blascommon.properties.BlasPrivateKeyConfiguration;
+import com.blas.blascommon.properties.BlasPrivateKeyProperties;
 import com.blas.blasemail.properties.EmailConfigProperties;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -36,7 +36,7 @@ public class EmailConfig {
   private final EmailConfigProperties emailConfigProperties;
 
   @Lazy
-  private final BlasPrivateKeyConfiguration blasPrivateKeyConfiguration;
+  private final BlasPrivateKeyProperties blasPrivateKeyProperties;
 
   @Lazy
   private final CertPasswordConfiguration certPasswordConfiguration;
@@ -49,8 +49,8 @@ public class EmailConfig {
     String password;
     try {
       final String privateKey = getPrivateKeyAesFromCertificate(
-          blasPrivateKeyConfiguration.getCertificate(),
-          blasPrivateKeyConfiguration.getAliasBlasPrivateKey(),
+          blasPrivateKeyProperties.getCertificate(),
+          blasPrivateKeyProperties.getAliasBlasPrivateKey(),
           certPasswordConfiguration.getCertPassword());
       password = aesDecrypt(privateKey,
           blasConfigService.getConfigValueFromKey(BLAS_IDP_EMAIL_PASSWORD));
