@@ -13,6 +13,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.enums.EmailTemplate;
 import com.blas.blascommon.payload.EmailRequest;
+import com.blas.blascommon.payload.FileAttachment;
 import com.blas.blascommon.payload.HtmlEmailWithAttachmentRequest;
 import com.blas.blascommon.utils.TemplateUtils;
 import jakarta.activation.DataHandler;
@@ -36,7 +37,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.springframework.boot.autoconfigure.mail.MailProperties;
-import org.springframework.data.util.Pair;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -120,11 +120,11 @@ public class HtmlWithAttachmentEmail extends Email {
   private void addAttachments(Multipart multipart,
       HtmlEmailWithAttachmentRequest htmlEmailWithAttachmentRequest, List<String> tempFileList,
       AtomicBoolean isAddAttachFileCompletely) {
-    for (Pair<String, String> fileAttach : htmlEmailWithAttachmentRequest.getFileList()) {
+    for (FileAttachment fileAttach : htmlEmailWithAttachmentRequest.getFileList()) {
       String tempFileName = genUUID();
-      String fileName = fileAttach.getFirst();
+      String fileName = fileAttach.getFileName();
       try {
-        byte[] fileContent = base64Decode(fileAttach.getSecond());
+        byte[] fileContent = base64Decode(fileAttach.getFileContent());
         writeByteArrayToFile(fileContent, TEMP_ELM_PATH + tempFileName);
         tempFileList.add(tempFileName);
         addAttachment(multipart, fileName, TEMP_ELM_PATH + tempFileName);
