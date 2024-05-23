@@ -41,8 +41,6 @@ spec:
             - name: http
               containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
-            - name: multicast
-              containerPort: 5701
           startupProbe:
             httpGet:
               path: /actuator/health/readiness
