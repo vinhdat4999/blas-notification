@@ -1,20 +1,13 @@
 package com.blas.blasemail.controller;
 
-import static java.time.LocalDateTime.now;
-
-import com.blas.blascommon.core.model.EmailLog;
 import com.blas.blascommon.core.service.AuthUserService;
 import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.core.service.EmailLogService;
-import com.blas.blascommon.exceptions.types.BadRequestException;
-import com.blas.blascommon.payload.EmailRequest;
+import com.blas.blascommon.payload.EmailResponse;
 import com.blas.blascommon.payload.HtmlEmailWithAttachmentRequest;
-import com.blas.blascommon.payload.HtmlEmailWithAttachmentResponse;
-import com.blas.blasemail.email.HtmlEmail;
-import com.blas.blasemail.email.HtmlWithAttachmentEmail;
+import com.blas.blasemail.service.EmailService;
+import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -28,45 +21,21 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping(value = "/send-email")
-public class HtmlEmailWithAttachmentController extends EmailController {
+public class HtmlEmailWithAttachmentController extends
+    EmailController<HtmlEmailWithAttachmentRequest> {
 
   public HtmlEmailWithAttachmentController(CentralizedLogService centralizedLogService,
-      HtmlEmail htmlEmail, HtmlWithAttachmentEmail htmlWithAttachmentEmail,
-      EmailLogService emailLogService, JavaMailSender javaMailSender,
-      ThreadPoolTaskExecutor taskExecutor, AuthUserService authUserService) {
-    super(centralizedLogService, htmlEmail, htmlWithAttachmentEmail, emailLogService,
-        javaMailSender,
-        taskExecutor, authUserService);
+      EmailService<HtmlEmailWithAttachmentRequest> emailService, EmailLogService emailLogService,
+      JavaMailSender javaMailSender, ThreadPoolTaskExecutor taskExecutor,
+      AuthUserService authUserService) {
+    super(centralizedLogService, emailService, emailLogService, javaMailSender, taskExecutor,
+        authUserService);
   }
 
   @PostMapping(value = "/html-with-attachment")
-  public ResponseEntity<HtmlEmailWithAttachmentResponse> sendHtmlWithFilesEmailHandler(
+  public ResponseEntity<EmailResponse> sendHtmlWithFilesEmailHandler(
       @RequestBody List<HtmlEmailWithAttachmentRequest> htmlEmailWithAttachmentRequestPayloadList,
-      Authentication authentication) {
-    int emailNum = htmlEmailWithAttachmentRequestPayloadList.size();
-    isPrioritizedRoleOrInQuota(emailNum, authentication);
-    List<EmailRequest> sentEmailList = new CopyOnWriteArrayList<>();
-    List<EmailRequest> failedEmailList = new CopyOnWriteArrayList<>();
-    CountDownLatch latch = new CountDownLatch(emailNum);
-    htmlEmailWithAttachmentRequestPayloadList.forEach(
-        email -> htmlWithAttachmentEmail.sendEmail(email, sentEmailList, failedEmailList, latch));
-    try {
-      latch.await();
-    } catch (InterruptedException exception) {
-      saveCentralizedLog(exception, authentication, htmlEmailWithAttachmentRequestPayloadList);
-      Thread.currentThread().interrupt();
-      throw new BadRequestException(INTERNAL_SYSTEM_ERROR_MSG, exception);
-    }
-    EmailLog emailLog = emailLogService.createEmailLog(
-        buildEmailLog(failedEmailList.size(), failedEmailList, sentEmailList.size(),
-            sentEmailList));
-    log.info(
-        String.format("Sent email - email_log_id: %s - fileReport: null",
-            emailLog.getEmailLogId()));
-    return ResponseEntity.ok(
-        HtmlEmailWithAttachmentResponse.builder().failedEmailNum(failedEmailList.size())
-            .failedEmailList(failedEmailList).sentEmailNum(sentEmailList.size())
-            .sentEmailList(sentEmailList).generatedBy(authentication.getName()).generatedTime(now())
-            .build());
+      Authentication authentication) throws IOException {
+    return sendHtmlEmail(htmlEmailWithAttachmentRequestPayloadList, authentication, false);
   }
 }

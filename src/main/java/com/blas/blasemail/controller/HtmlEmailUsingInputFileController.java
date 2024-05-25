@@ -9,10 +9,9 @@ import com.blas.blascommon.core.service.AuthUserService;
 import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.core.service.EmailLogService;
 import com.blas.blascommon.exceptions.types.BadRequestException;
+import com.blas.blascommon.payload.EmailResponse;
 import com.blas.blascommon.payload.HtmlEmailRequest;
-import com.blas.blascommon.payload.HtmlEmailResponse;
-import com.blas.blasemail.email.HtmlEmail;
-import com.blas.blasemail.email.HtmlWithAttachmentEmail;
+import com.blas.blasemail.service.EmailService;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,7 +33,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @RestController
 @RequestMapping(value = "/send-email")
-public class HtmlEmailUsingInputFileController extends EmailController {
+public class HtmlEmailUsingInputFileController extends EmailController<HtmlEmailRequest> {
 
   private static final String COLUMN_EMAIL_TO_NOT_FOUND = "Column emailTo not found";
   private static final String COLUMN_TITLE_TO_NOT_FOUND = "Column title not found";
@@ -42,17 +41,22 @@ public class HtmlEmailUsingInputFileController extends EmailController {
   private static final String ALL_INPUT_RECORD_MUST_BE_SAME_EMAIL_TEMPLATE = "All input record must be same email template";
 
   public HtmlEmailUsingInputFileController(CentralizedLogService centralizedLogService,
-      HtmlEmail htmlEmail, HtmlWithAttachmentEmail htmlWithAttachmentEmail,
-      EmailLogService emailLogService, JavaMailSender javaMailSender,
+      EmailService<HtmlEmailRequest> emailService, EmailLogService emailLogService,
+      JavaMailSender javaMailSender,
       ThreadPoolTaskExecutor taskExecutor, AuthUserService authUserService) {
-    super(centralizedLogService, htmlEmail, htmlWithAttachmentEmail, emailLogService,
-        javaMailSender,
-        taskExecutor, authUserService);
+    super(centralizedLogService, emailService, emailLogService, javaMailSender, taskExecutor,
+        authUserService);
   }
 
   @PostMapping(value = "/html-by-excel")
-  public ResponseEntity<HtmlEmailResponse> sendEmailByExcelFile(
+  public ResponseEntity<EmailResponse> sendEmailByExcelFile(
       @RequestParam("email-file") MultipartFile multipartFile, Authentication authentication)
+      throws IOException {
+    List<HtmlEmailRequest> htmlEmailRequests = buildHtmlEmailRequests(multipartFile);
+    return super.sendHtmlEmail(htmlEmailRequests, authentication, true);
+  }
+
+  private List<HtmlEmailRequest> buildHtmlEmailRequests(MultipartFile multipartFile)
       throws IOException {
     List<String[]> data = importFromExcel(multipartFile.getInputStream(),
         Objects.requireNonNull(multipartFile.getOriginalFilename()));
@@ -80,7 +84,7 @@ public class HtmlEmailUsingInputFileController extends EmailController {
       }
       htmlEmailRequests.add(buildHtmlEmailRequest(headerMap, lineData, headers, emailTemplate));
     }
-    return sendHtmlEmail(htmlEmailRequests, authentication, true);
+    return htmlEmailRequests;
   }
 
   private void validateInput(Map<String, Integer> headerMap) {
