@@ -16,7 +16,7 @@ data:
         password: 0546550566Qq@#
       data:
         mongodb:
-          uri: mongodb+srv://vinhdat4999:hpDOksLujqSukEbt@blas.ofn7pbk.mongodb.net/blas
+          uri: mongodb://localhost:27017/blas # This is default connection string applied when can not retrieve the protection one in database
       jpa:
         hibernate:
           ddl-auto: none

@@ -11,8 +11,7 @@ import com.blas.blascommon.exceptions.types.BadRequestException;
 import com.blas.blascommon.payload.EmailRequest;
 import com.blas.blascommon.payload.HtmlEmailRequest;
 import com.blas.blascommon.payload.HtmlEmailWithAttachmentRequest;
-import com.blas.blasemail.email.HtmlEmail;
-import com.blas.blasemail.email.HtmlWithAttachmentEmail;
+import com.blas.blasemail.service.EmailService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.hazelcast.collection.IQueue;
@@ -34,20 +33,26 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class HazelcastMessageListener extends EmailController {
+public class HazelcastMessageListener extends EmailController<EmailRequest> {
 
-  public HazelcastMessageListener(CentralizedLogService centralizedLogService, HtmlEmail htmlEmail,
-      HtmlWithAttachmentEmail htmlWithAttachmentEmail, EmailLogService emailLogService,
-      JavaMailSender javaMailSender, ThreadPoolTaskExecutor taskExecutor,
-      AuthUserService authUserService) {
-    super(centralizedLogService, htmlEmail, htmlWithAttachmentEmail, emailLogService,
-        javaMailSender,
-        taskExecutor, authUserService);
+  private static final String FILE_LIST_KEY = "fileList";
+
+  private final EmailService<HtmlEmailRequest> htmlEmailService;
+  private final EmailService<HtmlEmailWithAttachmentRequest> htmlEmailWithAttachmentService;
+
+  public HazelcastMessageListener(CentralizedLogService centralizedLogService,
+      EmailService<HtmlEmailRequest> htmlEmailService,
+      EmailService<HtmlEmailWithAttachmentRequest> htmlEmailWithAttachmentService,
+      EmailLogService emailLogService, JavaMailSender javaMailSender,
+      ThreadPoolTaskExecutor taskExecutor, AuthUserService authUserService) {
+    super(centralizedLogService, null, emailLogService, javaMailSender, taskExecutor,
+        authUserService);
+    this.htmlEmailService = htmlEmailService;
+    this.htmlEmailWithAttachmentService = htmlEmailWithAttachmentService;
   }
 
   @Bean
-  public int emailQueueListener(HazelcastInstance hazelcastInstance)
-      throws IOException {
+  public int emailQueueListener(HazelcastInstance hazelcastInstance) throws IOException {
     IQueue<String> queue = hazelcastInstance.getQueue(BLAS_EMAIL_QUEUE);
     while (!queue.isEmpty()) {
       log.info("Backup items are handling... Queue: {}", queue);
@@ -78,24 +83,26 @@ public class HazelcastMessageListener extends EmailController {
     List<EmailRequest> sentEmailList = new CopyOnWriteArrayList<>();
     List<EmailRequest> failedEmailList = new CopyOnWriteArrayList<>();
     CountDownLatch latch = new CountDownLatch(1);
-    JSONObject obj = new JSONArray(message).getJSONObject(0);
     SimpleModule module = new SimpleModule();
     module.addDeserializer(Pair.class, new PairJsonDeserializer());
     ObjectMapper mapper = new ObjectMapper();
     mapper.registerModule(module);
+    JSONObject obj = new JSONArray(message).getJSONObject(0);
     EmailRequest request;
-    try {
-      request = mapper.readValue(obj.toString(), HtmlEmailRequest.class);
-    } catch (Exception exception) {
+    if (obj.has(FILE_LIST_KEY)) {
       request = mapper.readValue(obj.toString(), HtmlEmailWithAttachmentRequest.class);
-    }
-    if (request instanceof HtmlEmailRequest htmlEmailRequest) {
-      htmlEmail.sendEmail(htmlEmailRequest, sentEmailList, failedEmailList,
-          taskExecutor.getThreadPoolExecutor(), latch);
+      htmlEmailWithAttachmentService.sendEmail((HtmlEmailWithAttachmentRequest) request,
+          sentEmailList, failedEmailList, taskExecutor.getThreadPoolExecutor(), latch);
     } else {
-      htmlWithAttachmentEmail.sendEmail((HtmlEmailWithAttachmentRequest) request, sentEmailList,
-          failedEmailList, latch);
+      request = mapper.readValue(obj.toString(), HtmlEmailRequest.class);
+      htmlEmailService.sendEmail((HtmlEmailRequest) request, sentEmailList, failedEmailList,
+          taskExecutor.getThreadPoolExecutor(), latch);
     }
+    postProcessor(latch, sentEmailList, failedEmailList);
+  }
+
+  private void postProcessor(CountDownLatch latch, List<EmailRequest> sentEmailList,
+      List<EmailRequest> failedEmailList) {
     try {
       latch.await();
     } catch (InterruptedException exception) {

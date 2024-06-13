@@ -3,10 +3,9 @@ package com.blas.blasemail.controller;
 import com.blas.blascommon.core.service.AuthUserService;
 import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.core.service.EmailLogService;
+import com.blas.blascommon.payload.EmailResponse;
 import com.blas.blascommon.payload.HtmlEmailRequest;
-import com.blas.blascommon.payload.HtmlEmailResponse;
-import com.blas.blasemail.email.HtmlEmail;
-import com.blas.blasemail.email.HtmlWithAttachmentEmail;
+import com.blas.blasemail.service.EmailService;
 import java.io.IOException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -22,19 +21,18 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping(value = "/send-email")
-public class HtmlEmailController extends EmailController {
+public class HtmlEmailController extends EmailController<HtmlEmailRequest> {
 
-  public HtmlEmailController(CentralizedLogService centralizedLogService, HtmlEmail htmlEmail,
-      HtmlWithAttachmentEmail htmlWithAttachmentEmail, EmailLogService emailLogService,
-      JavaMailSender javaMailSender, ThreadPoolTaskExecutor taskExecutor,
-      AuthUserService authUserService) {
-    super(centralizedLogService, htmlEmail, htmlWithAttachmentEmail, emailLogService,
-        javaMailSender,
-        taskExecutor, authUserService);
+  public HtmlEmailController(CentralizedLogService centralizedLogService,
+      EmailService<HtmlEmailRequest> emailService, EmailLogService emailLogService,
+      JavaMailSender javaMailSender,
+      ThreadPoolTaskExecutor taskExecutor, AuthUserService authUserService) {
+    super(centralizedLogService, emailService, emailLogService, javaMailSender, taskExecutor,
+        authUserService);
   }
 
   @PostMapping(value = "/html")
-  public ResponseEntity<HtmlEmailResponse> sendHtmlEmailHandler(
+  public ResponseEntity<EmailResponse> sendHtmlEmailHandler(
       @RequestBody List<HtmlEmailRequest> htmlEmailPayloadList, Authentication authentication)
       throws IOException {
     return sendHtmlEmail(htmlEmailPayloadList, authentication, false);
