@@ -87,17 +87,21 @@ public class HazelcastMessageListener extends EmailController<EmailRequest> {
     module.addDeserializer(Pair.class, new PairJsonDeserializer());
     ObjectMapper mapper = new ObjectMapper();
     mapper.registerModule(module);
-    JSONObject obj = new JSONArray(message).getJSONObject(0);
-    EmailRequest request;
-    if (obj.has(FILE_LIST_KEY)) {
-      request = mapper.readValue(obj.toString(), HtmlEmailWithAttachmentRequest.class);
-      htmlEmailWithAttachmentService.sendEmail((HtmlEmailWithAttachmentRequest) request,
-          sentEmailList, failedEmailList, taskExecutor.getThreadPoolExecutor(), latch);
-    } else {
-      request = mapper.readValue(obj.toString(), HtmlEmailRequest.class);
-      htmlEmailService.sendEmail((HtmlEmailRequest) request, sentEmailList, failedEmailList,
-          taskExecutor.getThreadPoolExecutor(), latch);
+    JSONArray arrayObject = new JSONArray(message);
+    for (int index = 0; index < arrayObject.length(); index++) {
+      JSONObject jsonObject = arrayObject.getJSONObject(index);
+      EmailRequest request;
+      if (jsonObject.has(FILE_LIST_KEY)) {
+        request = mapper.readValue(jsonObject.toString(), HtmlEmailWithAttachmentRequest.class);
+        htmlEmailWithAttachmentService.sendEmail((HtmlEmailWithAttachmentRequest) request,
+            sentEmailList, failedEmailList, taskExecutor.getThreadPoolExecutor(), latch);
+      } else {
+        request = mapper.readValue(jsonObject.toString(), HtmlEmailRequest.class);
+        htmlEmailService.sendEmail((HtmlEmailRequest) request, sentEmailList, failedEmailList,
+            taskExecutor.getThreadPoolExecutor(), latch);
+      }
     }
+
     postProcessor(latch, sentEmailList, failedEmailList);
   }
 

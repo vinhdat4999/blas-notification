@@ -4,6 +4,7 @@ import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.payload.EmailRequest;
 import com.blas.blascommon.payload.HtmlEmailRequest;
 import com.blas.blascommon.utils.TemplateUtils;
+import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.util.List;
