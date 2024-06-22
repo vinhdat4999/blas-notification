@@ -18,6 +18,7 @@ import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.enums.EmailTemplate;
 import com.blas.blascommon.exceptions.types.BadRequestException;
 import com.blas.blascommon.payload.EmailRequest;
+import com.blas.blascommon.payload.HtmlEmailRequest;
 import com.blas.blascommon.payload.HtmlEmailWithAttachmentRequest;
 import com.blas.blascommon.utils.TemplateUtils;
 import io.micrometer.core.instrument.Metrics;
@@ -114,6 +115,10 @@ public abstract class EmailService<T extends EmailRequest> {
           }
 
           helper.setText(htmlContent, true);
+          if (emailRequest instanceof HtmlEmailRequest) {
+            message.setContent(htmlContent, "text/html; charset=UTF-8");
+          }
+
           javaMailSender.send(message);
           emailRequest.setStatus(STATUS_SUCCESS);
           sentEmailList.add(emailRequest);

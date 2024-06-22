@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                                                       |
 |---------|--------------|---------------------------------------------------------------------|
+| 2.31.0  | 23/06/2024   | Uptake blas-common 5.11.0                                           |
 | 2.30.0  | 14/06/2024   | Add MongoDB config                                                  |
 | 2.29.0  | 25/05/2024   | Refactor code                                                       |
 | 2.28.0  | 24/05/2024   | Support Global ID to trace the request                              |
