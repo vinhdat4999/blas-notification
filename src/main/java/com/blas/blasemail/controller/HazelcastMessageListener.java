@@ -82,12 +82,12 @@ public class HazelcastMessageListener extends EmailController<EmailRequest> {
   private void sendEmail(String message) throws IOException {
     List<EmailRequest> sentEmailList = new CopyOnWriteArrayList<>();
     List<EmailRequest> failedEmailList = new CopyOnWriteArrayList<>();
-    CountDownLatch latch = new CountDownLatch(1);
+    JSONArray arrayObject = new JSONArray(message);
+    CountDownLatch latch = new CountDownLatch(arrayObject.length());
     SimpleModule module = new SimpleModule();
     module.addDeserializer(Pair.class, new PairJsonDeserializer());
     ObjectMapper mapper = new ObjectMapper();
     mapper.registerModule(module);
-    JSONArray arrayObject = new JSONArray(message);
     for (int index = 0; index < arrayObject.length(); index++) {
       JSONObject jsonObject = arrayObject.getJSONObject(index);
       EmailRequest request;
