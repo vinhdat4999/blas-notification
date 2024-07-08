@@ -77,7 +77,7 @@ logging:
     org.hibernate: WARN
     com.azure: WARN
     io.micrometer: WARN
-    com.hazelcast: WARN
+    com.hazelcast: ERROR
     org.mongodb: WARN
     org.springframework: WARN
     org.apache.http: WARN
