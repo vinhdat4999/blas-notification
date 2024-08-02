@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                                                       |
 |---------|--------------|---------------------------------------------------------------------|
+| 2.33.0  | 02/08/2024   | Uptake blas-common v5.14.0                                          |
 | 2.32.0  | 08/07/2024   | Fix email log not work properly                                     |
 | 2.31.0  | 23/06/2024   | Uptake blas-common 5.11.0                                           |
 | 2.30.0  | 14/06/2024   | Add MongoDB config                                                  |

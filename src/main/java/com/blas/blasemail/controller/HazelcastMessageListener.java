@@ -54,10 +54,16 @@ public class HazelcastMessageListener extends EmailController<EmailRequest> {
   @Bean
   public int emailQueueListener(HazelcastInstance hazelcastInstance) throws IOException {
     IQueue<String> queue = hazelcastInstance.getQueue(BLAS_EMAIL_QUEUE);
-    while (!queue.isEmpty()) {
-      log.info("Backup items are handling... Queue: {}", queue);
-      sendEmail(queue.poll());
-    }
+    taskExecutor.getThreadPoolExecutor().execute(() -> {
+      while (!queue.isEmpty()) {
+        try {
+          log.info("Backup items are handling... Queue: {}", queue);
+          sendEmail(queue.poll());
+        } catch (IOException exception) {
+          log.error(exception.toString());
+        }
+      }
+    });
     ItemListener<String> listener = new ItemListener<>() {
       @Override
       public void itemAdded(ItemEvent<String> itemEvent) {

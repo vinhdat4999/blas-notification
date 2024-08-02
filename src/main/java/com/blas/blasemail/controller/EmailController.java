@@ -145,8 +145,7 @@ public class EmailController<T extends EmailRequest> {
     }
   }
 
-  private String saveEmailLogFile(List<T> htmlEmailPayloadList,
-      boolean genFileReport) {
+  private String saveEmailLogFile(List<T> htmlEmailPayloadList, boolean genFileReport) {
     String fileReport = null;
     if (genFileReport) {
       List<String> headers = new ArrayList<>();
@@ -168,7 +167,7 @@ public class EmailController<T extends EmailRequest> {
         lineData.add(htmlEmailRequest.getEmailTemplateName());
         lineData.add(htmlEmailRequest.getReasonSendFailed());
         lineData.add(htmlEmailRequest.getStatus());
-        lineData.add(htmlEmailRequest.getSentTime().toString());
+        lineData.add(String.valueOf(htmlEmailRequest.getSentTime()));
         for (int subIndex = 7; subIndex < headers.size(); subIndex++) {
           lineData.add(htmlEmailRequest.getData().get(headers.get(subIndex)));
         }
