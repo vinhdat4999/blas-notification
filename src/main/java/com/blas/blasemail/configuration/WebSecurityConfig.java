@@ -17,6 +17,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -29,6 +30,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebSecurityConfig {
 
   private final Sha256Encoder sha256Encoder;
+  private final AccessDeniedHandler accessDeniedHandler;
 
   @Bean
   public AuthenticationManager authenticationManager(HttpSecurity http,
@@ -48,6 +50,8 @@ public class WebSecurityConfig {
         .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
         .authorizeHttpRequests(authorize -> authorize.requestMatchers("/actuator/**").permitAll()
             .anyRequest().authenticated())
+        .exceptionHandling(
+            authorize -> authorize.accessDeniedHandler(accessDeniedHandler))
         .headers(headers -> headers.frameOptions(FrameOptionsConfig::sameOrigin))
         .build();
   }
