@@ -23,7 +23,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/blas
     username: root
-    password: 123456
+    password: 123456Qq@#
   data:
     mongodb:
       uri: mongodb://localhost:27017/blas # This is default connection string applied when can not retrieve the protection one in database
@@ -38,7 +38,7 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 465
-    username: blasvietnam@gmail.com
+    username: blassystemvietnam@gmail.com
     properties:
       mail:
         smtp:

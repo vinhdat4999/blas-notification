@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jdk
+FROM vinhdat4999/java-21:jdk-21
 WORKDIR /app
 RUN mkdir temp
 COPY target/*.jar app.jar

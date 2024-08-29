@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                                                       |
 |---------|--------------|---------------------------------------------------------------------|
+| 2.35.0  | 29/08/2024   | Change to use Blas JDK base image                                   |
 | 2.34.0  | 15/08/2024   | Uptake blas-bom 1.21.0 and blas-common 5.15.0                       |
 | 2.33.0  | 02/08/2024   | Uptake blas-common v5.14.0                                          |
 | 2.32.0  | 08/07/2024   | Fix email log not work properly                                     |
