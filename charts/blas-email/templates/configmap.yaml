@@ -57,7 +57,7 @@ data:
         serviceName: {{.Chart.Name}}
       blas-service-support:
         throughServiceSupport: true
-        endpointCheckMaintenance: http://blas-service-support.{{ .Values.aksNamespace }}.svc.cluster.local/maintenance/check
+        endpointCheckMaintenance: http://blas-service-support.{{ .Values.aksNamespace }}.svc.cluster.local:8084/maintenance/check
       blas-idp:
         isSendEmailAlert: true
         jwt:
