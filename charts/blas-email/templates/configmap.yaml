@@ -5,15 +5,15 @@ metadata:
 data:
   application.yaml: |
     server:
-      port: 8082
+      port: {{ .Values.service.targetPort }}
     spring:
       profiles:
-        active: default
+        active: {{ index .Values "service-config" "spring" "profile" }}
       datasource:
         driver-class-name: com.mysql.cj.jdbc.Driver
-        url: jdbc:mysql://blas.mysql.database.azure.com/blas
-        username: blas
-        password: 0546550566Qq@#
+        url: jdbc:mysql://mysql-182243-0.cloudclusters.net:10013/blas
+        username: admin
+        password: 0DUTfSSC
       data:
         mongodb:
           uri: mongodb://localhost:27017/blas # This is default connection string applied when can not retrieve the protection one in database
@@ -25,22 +25,22 @@ data:
         properties:
           hibernate:
             dialect: org.hibernate.dialect.MySQL8Dialect
-      security:
-        oauth2:
-          client:
-            registration:
-              google:
-                clientId: 907490346247-lg1pq3fd2j79jl6gd0o54btqnm25l203.apps.googleusercontent.com
-                clientSecret: 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
-                scope:
-                  - email
-                  - profile
-              facebook:
-                clientId: 1483809445791923
-                clientSecret: cf95985be987f1ac3459bb4710e32fec
-                scope:
-                  - email
-                  - public_profile
+      mail:
+        host: smtp.gmail.com
+        port: 465
+        username: blassystemvietnam@gmail.com
+        properties:
+          mail:
+            smtp:
+              auth: true
+              starttls:
+                enable: true
+                required: true
+              ssl:
+                protocols: TLSv1.3
+                checkserveridentity: true
+              socketFactory:
+                class: javax.net.ssl.SSLSocketFactory
     management:
       endpoints:
         web:
@@ -54,10 +54,10 @@ data:
       aliasBlasPrivateKey: blasSecretKey
       certificate: BlasSecretKey.p12
       service:
-        serviceName: blas-email
+        serviceName: {{.Chart.Name}}
       blas-service-support:
         throughServiceSupport: true
-        endpointCheckMaintenance: http://blas-service-support.dev.svc.cluster.local/maintenance/check
+        endpointCheckMaintenance: http://blas-service-support.{{ .Values.aksNamespace }}.svc.cluster.local:8084/maintenance/check
       blas-idp:
         isSendEmailAlert: true
         jwt:

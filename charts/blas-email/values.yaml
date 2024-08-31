@@ -1,4 +1,5 @@
 replicaCount: 1
+revisions: 1
 
 image:
   repository: vinhdat4999/blas-email
@@ -9,7 +10,7 @@ imagePullSecrets: [ ]
 nameOverride: ""
 fullnameOverride: "blas-email"
 
-aksNamespace: dev
+aksNamespace: default
 hazelcastService: hazelcast
 
 serviceAccount:
@@ -36,13 +37,17 @@ securityContext: { }
 # runAsNonRoot: true
 # runAsUser: 1000
 
+strategy:
+  blueGreen:
+    autoPromotionEnabled: true
+
 service:
   type: LoadBalancer
-  port: 80
+  port: 8082
   targetPort: 8082
 
 ingress:
-  enabled: false
+  enabled: true
   className: ""
   annotations: { }
   # kubernetes.io/ingress.class: nginx
@@ -74,14 +79,14 @@ readinessProbe:
 
 resources:
   limits:
-    cpu: 800m
-    memory: 600Mi
+    cpu: 3000m
+    memory: 2000Mi
   requests:
-    cpu: 800m
-    memory: 600Mi
+    cpu: 400m
+    memory: 900Mi
 
 autoscaling:
-  enabled: false
+  enabled: true
   minReplicas: 1
   maxReplicas: 2
   targetCPUUtilizationPercentage: 80
@@ -95,6 +100,8 @@ tolerations: [ ]
 affinity: { }
 
 service-config:
+  spring:
+    profile: aks
   logging:
     level:
       root: INFO

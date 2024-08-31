@@ -1,13 +1,19 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: {{ include "blas-email.fullname" . }}
   labels:
     {{- include "blas-email.labels" . | nindent 4 }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
+  strategy:
+    blueGreen:
+      activeService: {{ include "blas-email.fullname" . }}
+      previewService: {{ include "blas-email.fullname" . }}-preview
+      autoPromotionEnabled: {{ .Values.strategy.blueGreen.autoPromotionEnabled }}
+{{- if not .Values.autoscaling.enabled}}
   replicas: {{ .Values.replicaCount }}
-  {{- end }}
+{{- end }}
+  revisionHistoryLimit: {{ .Values.revisions }}
   selector:
     matchLabels:
       {{- include "blas-email.selectorLabels" . | nindent 6 }}
