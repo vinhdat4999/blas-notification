@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                                                       |
 |---------|--------------|---------------------------------------------------------------------|
+| 3.0.0   | 14/09/2024   | Integrate with Hashicorp Vault                                      |
 | 2.36.0  | 03/09/2024   | Collect telemetry data using OpenTelemetry                          |
 | 2.35.0  | 29/08/2024   | Change to use Blas JDK base image                                   |
 | 2.34.0  | 15/08/2024   | Uptake blas-bom 1.21.0 and blas-common 5.15.0                       |

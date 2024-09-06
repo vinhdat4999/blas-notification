@@ -11,12 +11,12 @@ data:
         active: {{ index .Values "service-config" "spring" "profile" }}
       datasource:
         driver-class-name: com.mysql.cj.jdbc.Driver
-        url: jdbc:mysql://mysql-182243-0.cloudclusters.net:10013/blas
-        username: admin
-        password: 0DUTfSSC
+        url: ${mysql-url}
+        username: ${mysql-username}
+        password: ${mysql-password}
       data:
         mongodb:
-          uri: mongodb://localhost:27017/blas # This is default connection string applied when can not retrieve the protection one in database
+          uri: ${mongodb-url}
       jpa:
         hibernate:
           ddl-auto: none
@@ -28,7 +28,8 @@ data:
       mail:
         host: smtp.gmail.com
         port: 465
-        username: blassystemvietnam@gmail.com
+        username: ${email-username}
+        password: ${email-password}
         properties:
           mail:
             smtp:
@@ -54,23 +55,20 @@ data:
       aliasBlasPrivateKey: blasSecretKey
       certificate: BlasSecretKey.p12
       service:
-        serviceName: {{.Chart.Name}}
+        serviceName: {{ .Chart.Name }}
       blas-service-support:
         throughServiceSupport: true
         endpointCheckMaintenance: http://blas-service-support.{{ .Values.aksNamespace }}.svc.cluster.local:8084/maintenance/check
       blas-idp:
         isSendEmailAlert: true
-        jwt:
-          timeToExpired: 8640000 #100 days
-          timeToExpiredInternalToken: 120 #2 minutes
       hazelcast:
-        aksNamespace: {{.Values.aksNamespace}}
-        hazelcastService: {{.Values.hazelcastService}}
+        aksNamespace: {{ .Values.aksNamespace }}
+        hazelcastService: {{ .Values.hazelcastService }}
 
     logging:
       level:
 {{- range $key, $value := index .Values "service-config" "logging" "level" }}
-        {{$key}}: {{$value}}
+        {{ $key }}: {{ $value }}
 {{- end }}
 
   hazelcast-client.yaml: |-
@@ -78,3 +76,19 @@ data:
       network:
         kubernetes:
           enabled: {{ index .Values "service-config" "hazelcast-client" "network" "kubernetes" "enabled" }}
+
+  bootstrap.yaml: |-
+    spring:
+      cloud:
+        vault:
+          authentication: TOKEN
+          token: {{ index .Values "service-config" "vault" "token" }}
+          uri: {{ index .Values "service-config" "vault" "uri" }}
+          namespace: {{ index .Values "service-config" "vault" "namespace" }}
+          kv:
+            backend: {{ index .Values "service-config" "vault" "kv" "backend" }}
+            application-name: {{ index .Values "service-config" "vault" "kv" "application-name" }}
+            default-context: {{ index .Values "service-config" "vault" "kv" "default-context" }}
+          enabled: {{ index .Values "service-config" "vault" "enabled" }}
+          connection-timeout: {{ index .Values "service-config" "vault" "connection-timeout" }}
+          read-timeout: {{ index .Values "service-config" "vault" "read-timeout" }}

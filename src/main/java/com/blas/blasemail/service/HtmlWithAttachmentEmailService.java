@@ -28,7 +28,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.mail.MailProperties;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -41,9 +40,8 @@ public class HtmlWithAttachmentEmailService extends EmailService<HtmlEmailWithAt
   private static final String TEMP_ELM_PATH = "temp/";
 
   public HtmlWithAttachmentEmailService(CentralizedLogService centralizedLogService,
-      JavaMailSender javaMailSender,
-      @Qualifier("emailConfigProperties") MailProperties mailProperties,
-      TemplateUtils templateUtils, Set<String> needFieldMasks) {
+      JavaMailSender javaMailSender, MailProperties mailProperties, TemplateUtils templateUtils,
+      Set<String> needFieldMasks) {
     super(centralizedLogService, javaMailSender, mailProperties, templateUtils, needFieldMasks);
   }
 
