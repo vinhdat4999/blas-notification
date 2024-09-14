@@ -1,0 +1,14 @@
+spring:
+  cloud:
+    vault:
+      authentication: TOKEN
+      token: hvs.C4MAl9mb4qQXeNuUv9aNtLyj
+      uri: http://localhost:8200
+      namespace:
+      kv:
+        backend: secrets
+        application-name: blas-email
+        default-context: common
+      enabled: true
+      connection-timeout: 5000
+      read-timeout: 15000

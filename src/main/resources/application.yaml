@@ -21,12 +21,12 @@ spring:
         keep-alive: 5s
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/blas
-    username: root
-    password: 123456Qq@#
+    url: ${mysql-url-local}
+    username: ${mysql-username}
+    password: ${mysql-password}
   data:
     mongodb:
-      uri: mongodb://localhost:27017/blas # This is default connection string applied when can not retrieve the protection one in database
+      uri: ${mongodb-url}
   jpa:
     hibernate:
       ddl-auto: none
@@ -38,7 +38,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 465
-    username: blassystemvietnam@gmail.com
+    username: ${email-username}
+    password: ${email-password}
     properties:
       mail:
         smtp:
