@@ -81,8 +81,10 @@ data:
     spring:
       cloud:
         vault:
-          authentication: TOKEN
-          token: {{ index .Values "service-config" "vault" "token" }}
+          authentication: KUBERNETES
+          kubernetes:
+            role: {{ index .Values "service-config" "vault" "kubernetes" "role" }}
+            service-account-token-file: {{ index .Values "service-config" "vault" "kubernetes" "service-account-token-file" }}
           uri: {{ index .Values "service-config" "vault" "uri" }}
           namespace: {{ index .Values "service-config" "vault" "namespace" }}
           kv:

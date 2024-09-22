@@ -103,9 +103,8 @@ public class EmailController<T extends EmailRequest> {
     EmailLog emailLog = emailLogService.createEmailLog(
         buildEmailLog(failedEmailList.size(), failedEmailList, sentEmailList.size(),
             sentEmailList));
-    log.info(
-        String.format("Sent email - email_log_id: %s - fileReport: %s", emailLog.getEmailLogId(),
-            fileReport));
+    log.info("Sent email - email_log_id: {} - fileReport: {}", emailLog.getEmailLogId(),
+        fileReport);
     return ResponseEntity.ok(EmailResponse.builder()
         .failedEmailNum(failedEmailList.size())
         .failedEmailList(failedEmailList)

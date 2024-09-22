@@ -115,9 +115,11 @@ service-config:
       org.springframework: WARN
       org.apache.http: WARN
   vault:
-    token: hvs.C4MAl9mb4qQXeNuUv9aNtLyj
     uri: http://vault.default.svc.cluster.local:8200
     namespace:
+    kubernetes:
+      role: secret_role
+      service-account-token-file: /var/run/secrets/kubernetes.io/serviceaccount/token
     kv:
       backend: secrets
       application-name: blas-email
