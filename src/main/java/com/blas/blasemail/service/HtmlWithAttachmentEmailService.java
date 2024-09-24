@@ -23,8 +23,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
@@ -43,13 +41,6 @@ public class HtmlWithAttachmentEmailService extends EmailService<HtmlEmailWithAt
       JavaMailSender javaMailSender, MailProperties mailProperties, TemplateUtils templateUtils,
       Set<String> needFieldMasks) {
     super(centralizedLogService, javaMailSender, mailProperties, templateUtils, needFieldMasks);
-  }
-
-  @Override
-  public void sendEmail(HtmlEmailWithAttachmentRequest emailRequest,
-      List<EmailRequest> sentEmailList, List<EmailRequest> failedEmailList,
-      ThreadPoolExecutor executor, CountDownLatch latch) throws IOException {
-    super.sendEmail(emailRequest, sentEmailList, failedEmailList, executor, latch);
   }
 
   @Override

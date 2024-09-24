@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,9 +25,8 @@ public class HtmlEmailWithAttachmentController extends
 
   public HtmlEmailWithAttachmentController(CentralizedLogService centralizedLogService,
       EmailService<HtmlEmailWithAttachmentRequest> emailService, EmailLogService emailLogService,
-      JavaMailSender javaMailSender, ThreadPoolTaskExecutor taskExecutor,
-      AuthUserService authUserService) {
-    super(centralizedLogService, emailService, emailLogService, javaMailSender, taskExecutor,
+      ThreadPoolTaskExecutor taskExecutor, AuthUserService authUserService) {
+    super(centralizedLogService, emailService, emailLogService, taskExecutor,
         authUserService);
   }
 

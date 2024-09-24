@@ -27,7 +27,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.util.Pair;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
@@ -43,16 +42,15 @@ public class HazelcastMessageListener extends EmailController<EmailRequest> {
   public HazelcastMessageListener(CentralizedLogService centralizedLogService,
       EmailService<HtmlEmailRequest> htmlEmailService,
       EmailService<HtmlEmailWithAttachmentRequest> htmlEmailWithAttachmentService,
-      EmailLogService emailLogService, JavaMailSender javaMailSender,
-      ThreadPoolTaskExecutor taskExecutor, AuthUserService authUserService) {
-    super(centralizedLogService, null, emailLogService, javaMailSender, taskExecutor,
-        authUserService);
+      EmailLogService emailLogService, ThreadPoolTaskExecutor taskExecutor,
+      AuthUserService authUserService) {
+    super(centralizedLogService, null, emailLogService, taskExecutor, authUserService);
     this.htmlEmailService = htmlEmailService;
     this.htmlEmailWithAttachmentService = htmlEmailWithAttachmentService;
   }
 
   @Bean
-  public int emailQueueListener(HazelcastInstance hazelcastInstance) throws IOException {
+  public int emailQueueListener(HazelcastInstance hazelcastInstance) {
     IQueue<String> queue = hazelcastInstance.getQueue(BLAS_EMAIL_QUEUE);
     taskExecutor.getThreadPoolExecutor().execute(() -> {
       while (!queue.isEmpty()) {
@@ -122,7 +120,6 @@ public class HazelcastMessageListener extends EmailController<EmailRequest> {
     EmailLog emailLog = emailLogService.createEmailLog(
         buildEmailLog(failedEmailList.size(), failedEmailList, sentEmailList.size(),
             sentEmailList));
-    log.info(String.format("Sent email - email_log_id: %s - fileReport: null",
-        emailLog.getEmailLogId()));
+    log.info("Sent email - email_log_id: {} - fileReport: null", emailLog.getEmailLogId());
   }
 }
