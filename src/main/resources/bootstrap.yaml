@@ -6,7 +6,7 @@ spring:
       uri: http://localhost:8200
       namespace:
       kv:
-        backend: secrets
+        backend: secrets-dev
         application-name: blas-email
         default-context: common
       enabled: true

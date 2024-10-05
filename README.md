@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                                                       |
 |---------|--------------|---------------------------------------------------------------------|
+| 3.1.0   | 05/10/2024   | Add multiple namespace on Kubernetes                                |
 | 3.0.0   | 14/09/2024   | Integrate with Hashicorp Vault                                      |
 | 2.36.0  | 03/09/2024   | Collect telemetry data using OpenTelemetry                          |
 | 2.35.0  | 29/08/2024   | Change to use Blas JDK base image                                   |

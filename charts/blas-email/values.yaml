@@ -10,7 +10,7 @@ imagePullSecrets: [ ]
 nameOverride: ""
 fullnameOverride: "blas-email"
 
-aksNamespace: default
+aksNamespace: dev
 hazelcastService: hazelcast
 
 serviceAccount:
@@ -118,10 +118,10 @@ service-config:
     uri: http://vault.default.svc.cluster.local:8200
     namespace:
     kubernetes:
-      role: secret_role
+      role: secret_dev_role
       service-account-token-file: /var/run/secrets/kubernetes.io/serviceaccount/token
     kv:
-      backend: secrets
+      backend: secrets-dev
       application-name: blas-email
       default-context: common
     enabled: true
