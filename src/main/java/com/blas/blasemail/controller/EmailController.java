@@ -33,7 +33,6 @@ import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.core.Authentication;
 
@@ -62,16 +61,10 @@ public class EmailController<T extends EmailRequest> {
   protected final EmailLogService emailLogService;
 
   @Lazy
-  protected final JavaMailSender javaMailSender;
-
-  @Lazy
   protected final ThreadPoolTaskExecutor taskExecutor;
 
   @Lazy
   private final AuthUserService authUserService;
-
-  @Value("${blas.blas-idp.isSendEmailAlert}")
-  protected boolean isSendEmailAlert;
 
   @Value("${blas.blas-email.dailyQuotaNormalUser}")
   private int dailyQuotaNormalUser;
@@ -103,9 +96,8 @@ public class EmailController<T extends EmailRequest> {
     EmailLog emailLog = emailLogService.createEmailLog(
         buildEmailLog(failedEmailList.size(), failedEmailList, sentEmailList.size(),
             sentEmailList));
-    log.info(
-        String.format("Sent email - email_log_id: %s - fileReport: %s", emailLog.getEmailLogId(),
-            fileReport));
+    log.info("Sent email - email_log_id: {} - fileReport: {}", emailLog.getEmailLogId(),
+        fileReport);
     return ResponseEntity.ok(EmailResponse.builder()
         .failedEmailNum(failedEmailList.size())
         .failedEmailList(failedEmailList)
@@ -156,7 +148,7 @@ public class EmailController<T extends EmailRequest> {
       headers.add(REASON_SEND_FAILED);
       headers.add(STATUS_EMAIL);
       headers.add(SENT_TIME);
-      headers.addAll(htmlEmailPayloadList.get(0).getData().keySet());
+      headers.addAll(htmlEmailPayloadList.getFirst().getData().keySet());
       List<String[]> data = new ArrayList<>();
       for (int index = 0; index < htmlEmailPayloadList.size(); index++) {
         T htmlEmailRequest = htmlEmailPayloadList.get(index);

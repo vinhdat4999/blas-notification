@@ -70,9 +70,6 @@ public abstract class EmailService<T extends EmailRequest> {
   @Lazy
   private final Set<String> needFieldMasks;
 
-  @Value("${blas.blas-idp.isSendEmailAlert}")
-  protected boolean isSendEmailAlert;
-
   @Value("${blas.blas-email.numberTryToSendEmailAgain}")
   protected int numberTryToSendEmailAgain;
 

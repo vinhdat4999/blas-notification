@@ -10,7 +10,7 @@ imagePullSecrets: [ ]
 nameOverride: ""
 fullnameOverride: "blas-email"
 
-aksNamespace: default
+aksNamespace: dev
 hazelcastService: hazelcast
 
 serviceAccount:
@@ -105,7 +105,7 @@ service-config:
   logging:
     level:
       root: INFO
-      com.blas: DEBUG
+      com.blas: INFO
       org.hibernate: WARN
       com.azure: WARN
       io.micrometer: WARN
@@ -115,11 +115,13 @@ service-config:
       org.springframework: WARN
       org.apache.http: WARN
   vault:
-    token: hvs.C4MAl9mb4qQXeNuUv9aNtLyj
     uri: http://vault.default.svc.cluster.local:8200
     namespace:
+    kubernetes:
+      role: secret_dev_role
+      service-account-token-file: /var/run/secrets/kubernetes.io/serviceaccount/token
     kv:
-      backend: secrets
+      backend: secrets-dev
       application-name: blas-email
       default-context: common
     enabled: true

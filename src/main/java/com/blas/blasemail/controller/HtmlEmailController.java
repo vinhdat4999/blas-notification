@@ -25,10 +25,8 @@ public class HtmlEmailController extends EmailController<HtmlEmailRequest> {
 
   public HtmlEmailController(CentralizedLogService centralizedLogService,
       EmailService<HtmlEmailRequest> emailService, EmailLogService emailLogService,
-      JavaMailSender javaMailSender,
       ThreadPoolTaskExecutor taskExecutor, AuthUserService authUserService) {
-    super(centralizedLogService, emailService, emailLogService, javaMailSender, taskExecutor,
-        authUserService);
+    super(centralizedLogService, emailService, emailLogService, taskExecutor, authUserService);
   }
 
   @PostMapping(value = "/html")

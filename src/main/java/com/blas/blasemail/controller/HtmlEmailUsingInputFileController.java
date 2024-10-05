@@ -42,9 +42,8 @@ public class HtmlEmailUsingInputFileController extends EmailController<HtmlEmail
 
   public HtmlEmailUsingInputFileController(CentralizedLogService centralizedLogService,
       EmailService<HtmlEmailRequest> emailService, EmailLogService emailLogService,
-      JavaMailSender javaMailSender,
       ThreadPoolTaskExecutor taskExecutor, AuthUserService authUserService) {
-    super(centralizedLogService, emailService, emailLogService, javaMailSender, taskExecutor,
+    super(centralizedLogService, emailService, emailLogService, taskExecutor,
         authUserService);
   }
 
@@ -61,7 +60,7 @@ public class HtmlEmailUsingInputFileController extends EmailController<HtmlEmail
     List<String[]> data = importFromExcel(multipartFile.getInputStream(),
         Objects.requireNonNull(multipartFile.getOriginalFilename()));
     Map<String, Integer> headerMap = new HashMap<>();
-    String[] headers = data.get(0);
+    String[] headers = data.getFirst();
     List<HtmlEmailRequest> htmlEmailRequests = new ArrayList<>();
     for (int index = 0; index < headers.length; index++) {
       headerMap.put(headers[index], index);
