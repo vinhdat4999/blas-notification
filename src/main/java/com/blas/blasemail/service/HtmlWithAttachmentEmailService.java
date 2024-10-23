@@ -10,6 +10,7 @@ import com.blas.blascommon.payload.EmailRequest;
 import com.blas.blascommon.payload.FileAttachment;
 import com.blas.blascommon.payload.HtmlEmailWithAttachmentRequest;
 import com.blas.blascommon.utils.TemplateUtils;
+import com.blas.blasemail.properties.MailProperties;
 import jakarta.activation.DataHandler;
 import jakarta.activation.DataSource;
 import jakarta.activation.FileDataSource;
@@ -26,8 +27,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
-import org.springframework.boot.autoconfigure.mail.MailProperties;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -38,9 +37,9 @@ public class HtmlWithAttachmentEmailService extends EmailService<HtmlEmailWithAt
   private static final String TEMP_ELM_PATH = "temp/";
 
   public HtmlWithAttachmentEmailService(CentralizedLogService centralizedLogService,
-      JavaMailSender javaMailSender, MailProperties mailProperties, TemplateUtils templateUtils,
-      Set<String> needFieldMasks) {
-    super(centralizedLogService, javaMailSender, mailProperties, templateUtils, needFieldMasks);
+      MailProperties mailProperties, TemplateUtils templateUtils, Set<String> needFieldMasks,
+      MailSelectService mailSelectService) {
+    super(centralizedLogService, mailProperties, templateUtils, needFieldMasks, mailSelectService);
   }
 
   @Override

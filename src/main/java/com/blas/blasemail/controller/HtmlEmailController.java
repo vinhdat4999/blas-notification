@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;

@@ -27,10 +27,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
-public class WebSecurityConfig {
+public class WebSecurityConfiguration {
 
   private final Sha256Encoder sha256Encoder;
   private final AccessDeniedHandler accessDeniedHandler;
+  private final NeedMaskFieldProperties needMaskFieldProperties;
 
   @Bean
   public AuthenticationManager authenticationManager(HttpSecurity http,
@@ -67,7 +68,7 @@ public class WebSecurityConfig {
   }
 
   @Bean
-  public Set<String> needFieldMasks(NeedMaskFieldProperties needMaskFieldProperties) {
+  public Set<String> needFieldMasks() {
     return Set.of(needMaskFieldProperties.getNeedMaskFields());
   }
 }
