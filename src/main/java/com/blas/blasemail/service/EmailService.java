@@ -21,14 +21,17 @@ import com.blas.blascommon.payload.EmailRequest;
 import com.blas.blascommon.payload.HtmlEmailRequest;
 import com.blas.blascommon.payload.HtmlEmailWithAttachmentRequest;
 import com.blas.blascommon.utils.TemplateUtils;
+import com.blas.blasemail.properties.MailCredential;
+import com.blas.blasemail.properties.MailProperties;
 import io.micrometer.core.instrument.Metrics;
+import jakarta.annotation.Resource;
 import jakarta.mail.MessagingException;
-import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.RejectedExecutionException;
@@ -41,10 +44,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.mail.MailProperties;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 
 @Slf4j
@@ -59,16 +62,17 @@ public abstract class EmailService<T extends EmailRequest> {
   protected final CentralizedLogService centralizedLogService;
 
   @Lazy
-  protected final JavaMailSender javaMailSender;
-
-  @Lazy
   protected final MailProperties mailProperties;
 
   @Lazy
   protected final TemplateUtils templateUtils;
 
   @Lazy
+  @Resource(name = "needFieldMasks")
   private final Set<String> needFieldMasks;
+
+  @Lazy
+  private final MailSelectService mailSelectService;
 
   @Value("${blas.blas-email.numberTryToSendEmailAgain}")
   protected int numberTryToSendEmailAgain;
@@ -82,6 +86,9 @@ public abstract class EmailService<T extends EmailRequest> {
 
     String unkMessage = validateHeader(getEmailTemplate(emailRequest.getEmailTemplateName()),
         emailRequest.getData().keySet());
+
+    MailCredential mailCredential = mailSelectService.getNextMailCredential();
+    JavaMailSender javaMailSender = buildJavaEmailSender(mailCredential);
     MimeMessage message = javaMailSender.createMimeMessage();
     try {
       executor.execute(() -> {
@@ -97,7 +104,7 @@ public abstract class EmailService<T extends EmailRequest> {
         try {
           MimeMessageHelper helper = new MimeMessageHelper(message,
               emailRequest instanceof HtmlEmailWithAttachmentRequest);
-          helper.setFrom(new InternetAddress(mailProperties.getUsername()));
+          helper.setFrom(mailCredential.getUsername());
           helper.setTo(emailRequest.getEmailTo());
           helper.setSubject(emailRequest.getTitle());
           String htmlContent = templateUtils.generateHtmlContent(
@@ -121,9 +128,11 @@ public abstract class EmailService<T extends EmailRequest> {
           sentEmailList.add(emailRequest);
           Metrics.counter("blas.blas-email.number-of-first-trying").increment();
         } catch (MailException | MessagingException mailException) {
+          saveCentralizedLog(mailException, mailCredential, emailRequest);
           trySendingEmail(emailRequest, message, sentEmailList, failedEmailList);
         } catch (IOException ioException) {
-          errorHandler(ioException, emailRequest, failedEmailList, ioException.getMessage());
+          errorHandler(ioException, mailCredential, emailRequest, failedEmailList,
+              ioException.getMessage());
         } finally {
           emailRequest.setSentTime(now());
           emailRequest.setReasonSendFailed(
@@ -135,7 +144,7 @@ public abstract class EmailService<T extends EmailRequest> {
     } catch (RejectedExecutionException exception) {
       emailRequest.setSentTime(now());
       emailRequest.setReasonSendFailed(TOO_MANY_REQUEST_TO_BLAS_EMAIL_PLEASE_TRY_AGAIN);
-      saveCentralizedLog(exception, emailRequest);
+      saveCentralizedLog(exception, mailCredential, emailRequest);
       failedEmailList.add(emailRequest);
       latch.countDown();
     }
@@ -146,10 +155,32 @@ public abstract class EmailService<T extends EmailRequest> {
       List<EmailRequest> failedEmailList, Map<String, String> data, String htmlContent)
       throws MessagingException, FileUploadException;
 
-  private void saveCentralizedLog(Exception exception, Object object) {
+  private void saveCentralizedLog(Exception exception, MailCredential mailCredential,
+      Object object) {
     centralizedLogService.saveLog(exception,
-        maskJsonObjectWithFields(new JSONObject(javaMailSender), needFieldMasks), object,
+        maskJsonObjectWithFields(new JSONObject(mailCredential), needFieldMasks), object,
         maskJsonObjectWithFields(new JSONObject(mailProperties), needFieldMasks));
+  }
+
+  private JavaMailSender buildJavaEmailSender(MailCredential mailCredential) {
+    JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+    mailSender.setHost(mailProperties.getHost());
+    mailSender.setPort(mailProperties.getPort());
+    mailSender.setUsername(mailCredential.getUsername());
+    mailSender.setPassword(mailCredential.getPassword());
+
+    Properties props = mailSender.getJavaMailProperties();
+    props.put("mail.transport.protocol", "smtps");
+    props.put("mail.smtp.auth", "true");
+    props.put("mail.smtp.starttls.enable", "true");
+    props.put("mail.smtp.ssl.enable", "true");
+    props.put("mail.smtp.ssl.checkserveridentity", "true");
+    props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+
+    props.put("mail.smtp.connectiontimeout", "5000");
+    props.put("mail.smtp.timeout", "5000");
+    props.put("mail.smtp.writetimeout", "5000");
+    return mailSender;
   }
 
   private boolean isInvalidReceiverEmail(T emailRequest,
@@ -166,35 +197,34 @@ public abstract class EmailService<T extends EmailRequest> {
   private void trySendingEmail(T emailRequest, MimeMessage message,
       List<EmailRequest> sentEmailList, List<EmailRequest> failedEmailList) {
     int attempts = 1;
-    Exception exception = null;
     while (attempts <= numberTryToSendEmailAgain) {
+      MailCredential mailCredential = mailSelectService.getNextMailCredential();
       try {
         long waitTime = (long) (waitTimeFirstTryToSendEmailAgain
             + waitTimeFirstTryToSendEmailAgain * (attempts - 1) * 0.5);
         TimeUnit.MILLISECONDS.sleep(waitTime);
+        JavaMailSender javaMailSender = buildJavaEmailSender(mailCredential);
         javaMailSender.send(message);
         sentEmailList.add(emailRequest);
         emailRequest.setStatus(STATUS_SUCCESS);
         emailRequest.setSentTime(now());
         return;
       } catch (MailException mailException) {
-        exception = mailException;
+        saveCentralizedLog(mailException, mailCredential, emailRequest);
         attempts++;
       } catch (InterruptedException retryException) {
-        exception = retryException;
+        saveCentralizedLog(retryException, mailCredential, emailRequest);
         attempts++;
         Thread.currentThread().interrupt();
       }
     }
     emailRequest.setReasonSendFailed(INTERNAL_SYSTEM_MSG);
-    assert exception != null;
-    saveCentralizedLog(exception, emailRequest);
     failedEmailList.add(emailRequest);
   }
 
-  private void errorHandler(Exception exception, T emailRequest,
+  private void errorHandler(Exception exception, MailCredential mailCredential, T emailRequest,
       List<EmailRequest> failedEmailList, String errorMessage) {
-    saveCentralizedLog(exception, emailRequest);
+    saveCentralizedLog(exception, mailCredential, emailRequest);
     emailRequest.setReasonSendFailed(errorMessage);
     failedEmailList.add(emailRequest);
   }

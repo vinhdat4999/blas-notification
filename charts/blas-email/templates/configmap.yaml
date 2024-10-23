@@ -25,23 +25,9 @@ data:
         properties:
           hibernate:
             dialect: org.hibernate.dialect.MySQL8Dialect
-      mail:
-        host: smtp.gmail.com
-        port: 465
-        username: ${email-username}
-        password: ${email-password}
-        properties:
-          mail:
-            smtp:
-              auth: true
-              starttls:
-                enable: true
-                required: true
-              ssl:
-                protocols: TLSv1.3
-                checkserveridentity: true
-              socketFactory:
-                class: javax.net.ssl.SSLSocketFactory
+    autoconfigure:
+      exclude:
+        - org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration
     management:
       endpoints:
         web:
@@ -59,6 +45,15 @@ data:
       blas-service-support:
         throughServiceSupport: true
         endpointCheckMaintenance: http://blas-service-support.{{ .Values.aksNamespace }}.svc.cluster.local:8084/maintenance/check
+      blas-email:
+        mail:
+          host: smtp.gmail.com
+          port: 465
+          credentials: ${mail-credentials}
+        dailyQuotaNormalUser: 10
+        numberTryToSendEmailAgain: 9
+        waitTimeFirstTryToSendEmailAgain: 1000 #miliseconds
+        needMaskFields: password
       blas-idp:
         isSendEmailAlert: true
       hazelcast:
