@@ -1,6 +1,7 @@
 package com.blas.blasemail.controller;
 
 import static com.blas.blascommon.constants.MessageTopic.BLAS_EMAIL_QUEUE;
+import static com.blas.blascommon.utils.JsonUtils.maskJsonWithFields;
 
 import com.blas.blascommon.core.model.EmailLog;
 import com.blas.blascommon.core.service.AuthUserService;
@@ -20,6 +21,7 @@ import com.hazelcast.collection.ItemListener;
 import com.hazelcast.core.HazelcastInstance;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import lombok.extern.slf4j.Slf4j;
@@ -43,8 +45,9 @@ public class HazelcastMessageListener extends EmailController<EmailRequest> {
       EmailService<HtmlEmailRequest> htmlEmailService,
       EmailService<HtmlEmailWithAttachmentRequest> htmlEmailWithAttachmentService,
       EmailLogService emailLogService, ThreadPoolTaskExecutor taskExecutor,
-      AuthUserService authUserService) {
-    super(centralizedLogService, null, emailLogService, taskExecutor, authUserService);
+      AuthUserService authUserService, Set<String> needFieldMasks) {
+    super(centralizedLogService, null, emailLogService, taskExecutor, authUserService,
+        needFieldMasks);
     this.htmlEmailService = htmlEmailService;
     this.htmlEmailWithAttachmentService = htmlEmailWithAttachmentService;
   }
@@ -118,8 +121,11 @@ public class HazelcastMessageListener extends EmailController<EmailRequest> {
       throw new BadRequestException(INTERNAL_SYSTEM_ERROR_MSG, exception);
     }
     EmailLog emailLog = emailLogService.createEmailLog(
-        buildEmailLog(failedEmailList.size(), failedEmailList, sentEmailList.size(),
-            sentEmailList));
-    log.info("Sent email - email_log_id: {} - fileReport: null", emailLog.getEmailLogId());
+        buildEmailLog(failedEmailList.size(),
+            maskJsonWithFields(new JSONArray(failedEmailList), needFieldMasks),
+            sentEmailList.size(),
+            maskJsonWithFields(new JSONArray(sentEmailList), needFieldMasks)), false);
+    log.info("Email sending processed - email_log_id: {} - fileReport: null",
+        emailLog.getEmailLogId());
   }
 }

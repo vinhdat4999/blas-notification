@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.ResponseEntity;
@@ -41,9 +42,10 @@ public class HtmlEmailUsingInputFileController extends EmailController<HtmlEmail
 
   public HtmlEmailUsingInputFileController(CentralizedLogService centralizedLogService,
       EmailService<HtmlEmailRequest> emailService, EmailLogService emailLogService,
-      ThreadPoolTaskExecutor taskExecutor, AuthUserService authUserService) {
-    super(centralizedLogService, emailService, emailLogService, taskExecutor,
-        authUserService);
+      ThreadPoolTaskExecutor taskExecutor, Set<String> needFieldMasks,
+      AuthUserService authUserService) {
+    super(centralizedLogService, emailService, emailLogService, taskExecutor, authUserService,
+        needFieldMasks);
   }
 
   @PostMapping(value = "/html-by-excel")

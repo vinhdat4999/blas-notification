@@ -1,14 +1,17 @@
 package com.blas.blasemail.controller;
 
+import static com.blas.blascommon.constants.MDCConstant.EMAIL_LOG_ID;
 import static com.blas.blascommon.constants.MDCConstant.GLOBAL_ID;
 import static com.blas.blascommon.enums.FileType.XLSX;
 import static com.blas.blascommon.security.SecurityUtils.getUserIdLoggedIn;
 import static com.blas.blascommon.security.SecurityUtils.getUsernameLoggedIn;
 import static com.blas.blascommon.security.SecurityUtils.isPrioritizedRole;
+import static com.blas.blascommon.utils.JsonUtils.maskJsonWithFields;
 import static com.blas.blascommon.utils.StringUtils.DOT;
 import static com.blas.blascommon.utils.fileutils.exportfile.Excel.exportToExcel;
 import static java.lang.System.currentTimeMillis;
 import static java.time.LocalDateTime.now;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.blas.blascommon.core.model.AuthUser;
 import com.blas.blascommon.core.model.EmailLog;
@@ -20,10 +23,13 @@ import com.blas.blascommon.exceptions.types.ForbiddenException;
 import com.blas.blascommon.payload.EmailRequest;
 import com.blas.blascommon.payload.EmailResponse;
 import com.blas.blasemail.service.EmailService;
+import jakarta.annotation.Resource;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import lombok.RequiredArgsConstructor;
@@ -69,6 +75,10 @@ public class EmailController<T extends EmailRequest> {
   @Value("${blas.blas-email.dailyQuotaNormalUser}")
   private int dailyQuotaNormalUser;
 
+  @Lazy
+  @Resource(name = "needFieldMasks")
+  protected final Set<String> needFieldMasks;
+
   protected ResponseEntity<EmailResponse> sendHtmlEmail(
       List<T> emailPayloads, Authentication authentication, boolean genFileReport)
       throws IOException {
@@ -94,10 +104,13 @@ public class EmailController<T extends EmailRequest> {
     String fileReport = saveEmailLogFile(emailPayloads, genFileReport);
 
     EmailLog emailLog = emailLogService.createEmailLog(
-        buildEmailLog(failedEmailList.size(), failedEmailList, sentEmailList.size(),
-            sentEmailList));
-    log.info("Sent email - email_log_id: {} - fileReport: {}", emailLog.getEmailLogId(),
-        fileReport);
+        buildEmailLog(failedEmailList.size(),
+            maskJsonWithFields(new JSONArray(failedEmailList), needFieldMasks),
+            sentEmailList.size(),
+            maskJsonWithFields(new JSONArray(sentEmailList), needFieldMasks)), false);
+
+    log.info("Email sending processed - email_log_id: {} - fileReport: {}",
+        emailLog.getEmailLogId(), fileReport);
     return ResponseEntity.ok(EmailResponse.builder()
         .failedEmailNum(failedEmailList.size())
         .failedEmailList(failedEmailList)
@@ -108,8 +121,8 @@ public class EmailController<T extends EmailRequest> {
         .build());
   }
 
-  protected EmailLog buildEmailLog(int failedEmailNum, List<EmailRequest> failedEmailList,
-      int sentEmailNum, List<EmailRequest> sentEmailList) {
+  protected EmailLog buildEmailLog(int failedEmailNum, JSONArray failedEmailList, int sentEmailNum,
+      JSONArray sentEmailList) {
     String username;
     try {
       username = getUsernameLoggedIn();
@@ -117,14 +130,20 @@ public class EmailController<T extends EmailRequest> {
       username = SYSTEM;
     }
     AuthUser generatedBy = authUserService.getAuthUserByUsername(username);
+
+    String initEmailLogId = MDC.get(EMAIL_LOG_ID);
+    if (isBlank(initEmailLogId)) {
+      initEmailLogId = UUID.randomUUID().toString();
+    }
     return EmailLog.builder()
+        .emailLogId(initEmailLogId)
         .globalId(MDC.get(GLOBAL_ID))
         .authUser(generatedBy)
         .timeLog(now())
         .failedEmailNum(failedEmailNum)
-        .failedEmailList(new JSONArray(failedEmailList).toString())
+        .failedEmailList(failedEmailList.toString())
         .sentEmailNum(sentEmailNum)
-        .sentEmailList(new JSONArray(sentEmailList).toString())
+        .sentEmailList(sentEmailList.toString())
         .build();
   }
 
