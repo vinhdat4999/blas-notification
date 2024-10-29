@@ -8,6 +8,7 @@ import com.blas.blascommon.payload.HtmlEmailRequest;
 import com.blas.blasemail.service.EmailService;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -24,8 +25,10 @@ public class HtmlEmailController extends EmailController<HtmlEmailRequest> {
 
   public HtmlEmailController(CentralizedLogService centralizedLogService,
       EmailService<HtmlEmailRequest> emailService, EmailLogService emailLogService,
-      ThreadPoolTaskExecutor taskExecutor, AuthUserService authUserService) {
-    super(centralizedLogService, emailService, emailLogService, taskExecutor, authUserService);
+      ThreadPoolTaskExecutor taskExecutor, Set<String> needFieldMasks,
+      AuthUserService authUserService) {
+    super(centralizedLogService, emailService, emailLogService, taskExecutor,
+        authUserService, needFieldMasks);
   }
 
   @PostMapping(value = "/html")

@@ -54,7 +54,7 @@ blas:
     dailyQuotaNormalUser: 10
     numberTryToSendEmailAgain: 9
     waitTimeFirstTryToSendEmailAgain: 1000 #miliseconds
-    needMaskFields: password
+    needMaskFields: password,authenKey
   blas-idp:
     isSendEmailAlert: true
   hazelcast:

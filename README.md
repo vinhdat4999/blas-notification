@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                                                       |
 |---------|--------------|---------------------------------------------------------------------|
+| 4.1.0   | 29/10/2024   | Trace the email sending result                                      |
 | 4.0.0   | 23/10/2024   | Add Mail Credential Pool                                            |
 | 3.1.0   | 05/10/2024   | Add multiple namespace on Kubernetes                                |
 | 3.0.0   | 14/09/2024   | Integrate with Hashicorp Vault                                      |
