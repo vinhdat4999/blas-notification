@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.core.Authentication;
@@ -25,7 +26,8 @@ public class HtmlEmailController extends EmailController<HtmlEmailRequest> {
 
   public HtmlEmailController(CentralizedLogService centralizedLogService,
       EmailService<HtmlEmailRequest> emailService, EmailLogService emailLogService,
-      ThreadPoolTaskExecutor taskExecutor, Set<String> needFieldMasks,
+      @Qualifier("getAsyncExecutor") ThreadPoolTaskExecutor taskExecutor,
+      Set<String> needFieldMasks,
       AuthUserService authUserService) {
     super(centralizedLogService, emailService, emailLogService, taskExecutor,
         authUserService, needFieldMasks);

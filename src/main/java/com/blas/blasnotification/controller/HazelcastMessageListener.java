@@ -45,7 +45,8 @@ public class HazelcastMessageListener extends EmailController<EmailRequest> {
   public HazelcastMessageListener(CentralizedLogService centralizedLogService,
       EmailService<HtmlEmailRequest> htmlEmailService,
       EmailService<HtmlEmailWithAttachmentRequest> htmlEmailWithAttachmentService,
-      EmailLogService emailLogService, @Qualifier("getAsyncExecutor") ThreadPoolTaskExecutor taskExecutor,
+      EmailLogService emailLogService,
+      @Qualifier("getAsyncExecutor") ThreadPoolTaskExecutor taskExecutor,
       AuthUserService authUserService, Set<String> needFieldMasks) {
     super(centralizedLogService, null, emailLogService, taskExecutor, authUserService,
         needFieldMasks);
