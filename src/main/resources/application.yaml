@@ -38,6 +38,8 @@ spring:
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration
+  main:
+    allow-bean-definition-overriding: true
 blas:
   aliasBlasPrivateKey: blasSecretKey
   certificate: BlasSecretKey.p12

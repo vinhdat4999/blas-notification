@@ -28,6 +28,8 @@ data:
     autoconfigure:
       exclude:
         - org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration
+    main:
+      allow-bean-definition-overriding: true
     management:
       endpoints:
         web:

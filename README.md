@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                                                       |
 |---------|--------------|---------------------------------------------------------------------|
+| 4.2.0   | 08/11/2024   | Add notification feature                                            |
 | 4.1.0   | 29/10/2024   | Trace the email sending result                                      |
 | 4.0.0   | 23/10/2024   | Add Mail Credential Pool                                            |
 | 3.1.0   | 05/10/2024   | Add multiple namespace on Kubernetes                                |
