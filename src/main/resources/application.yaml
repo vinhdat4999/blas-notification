@@ -44,11 +44,11 @@ blas:
   aliasBlasPrivateKey: blasSecretKey
   certificate: BlasSecretKey.p12
   service:
-    serviceName: blas-email
+    serviceName: blas-notification
   blas-service-support:
     throughServiceSupport: true
     endpointCheckMaintenance: http://localhost:8084/maintenance/check
-  blas-email:
+  blas-notification:
     mail:
       host: smtp.gmail.com
       port: 465
