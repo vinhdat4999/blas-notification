@@ -27,6 +27,7 @@ import java.util.concurrent.CountDownLatch;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.util.Pair;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -44,7 +45,7 @@ public class HazelcastMessageListener extends EmailController<EmailRequest> {
   public HazelcastMessageListener(CentralizedLogService centralizedLogService,
       EmailService<HtmlEmailRequest> htmlEmailService,
       EmailService<HtmlEmailWithAttachmentRequest> htmlEmailWithAttachmentService,
-      EmailLogService emailLogService, ThreadPoolTaskExecutor taskExecutor,
+      EmailLogService emailLogService, @Qualifier("getAsyncExecutor") ThreadPoolTaskExecutor taskExecutor,
       AuthUserService authUserService, Set<String> needFieldMasks) {
     super(centralizedLogService, null, emailLogService, taskExecutor, authUserService,
         needFieldMasks);
