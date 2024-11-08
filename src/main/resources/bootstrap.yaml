@@ -7,7 +7,7 @@ spring:
       namespace:
       kv:
         backend: secrets-dev
-        application-name: blas-email
+        application-name: blas-notification
         default-context: common
       enabled: true
       connection-timeout: 5000

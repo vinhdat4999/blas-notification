@@ -1,9 +1,10 @@
-# blas-email
+# blas-notification
 
 ## Changes
 
 | Version | Date release | Tickets/Notes                                                       |
 |---------|--------------|---------------------------------------------------------------------|
+| 5.0.0   | 08/11/2024   | Rename blas-email to blas-notification service                      |
 | 4.1.0   | 29/10/2024   | Trace the email sending result                                      |
 | 4.0.0   | 23/10/2024   | Add Mail Credential Pool                                            |
 | 3.1.0   | 05/10/2024   | Add multiple namespace on Kubernetes                                |
@@ -43,8 +44,8 @@
 | 2.4.0   | 02/04/2023   | Uptake blas-common v2.2.0                                           |
 | 2.3.0   | 30/03/2023   | Upgrade Spring boot 3.0.5                                           |
 | 2.2.0   | 23/03/2023   | Support try to resend email if failed in first try                  |
-| 2.1.0   | 20/03/2023   | Support handlers exception blas-email                               |
-| 2.0.0   | 19/03/2023   | Support monitoring blas-email                                       |
+| 2.1.0   | 20/03/2023   | Support handlers exception blas-notification                        |
+| 2.0.0   | 19/03/2023   | Support monitoring blas-notification                                |
 | 1.8.0   | 17/03/2023   | Support email template                                              |
 | 1.7.0   | 16/03/2023   | Uptake blas-common 1.28.0                                           |
 | 1.6.0   | 15/03/2023   | Uptake blas-common 1.27.0                                           |

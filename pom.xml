@@ -6,15 +6,15 @@
   <parent>
     <groupId>com.blas</groupId>
     <artifactId>blas-bom</artifactId>
-    <version>1.22.0</version>
+    <version>1.23.0</version>
   </parent>
-  <artifactId>blas-email</artifactId>
-  <version>4.1.0</version>
-  <name>blas-email</name>
-  <description>blas-email</description>
+  <artifactId>blas-notification</artifactId>
+  <version>5.0.0</version>
+  <name>blas-notification</name>
+  <description>blas-notification</description>
   <properties>
     <java.version>${project.java.version}</java.version>
-    <com.blas.blas.common.version>5.18.0</com.blas.blas.common.version>
+    <com.blas.blas.common.version>6.2.0</com.blas.blas.common.version>
     <maven.compiler.source>${project.java.version}</maven.compiler.source>
     <maven.compiler.target>${project.java.version}</maven.compiler.target>
   </properties>
@@ -64,7 +64,7 @@
     <repository>
       <id>github</id>
       <name>GitHub Apache Maven Packages</name>
-      <url>https://maven.pkg.github.com/vinhdat4999/blas-email</url>
+      <url>https://maven.pkg.github.com/vinhdat4999/blas-notification</url>
     </repository>
   </distributionManagement>
   <build>
