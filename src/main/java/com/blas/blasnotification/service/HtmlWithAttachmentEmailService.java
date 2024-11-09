@@ -6,7 +6,6 @@ import static com.blas.blascommon.utils.fileutils.FileUtils.writeByteArrayToFile
 import static java.lang.String.format;
 
 import com.blas.blascommon.core.service.CentralizedLogService;
-import com.blas.blascommon.payload.EmailRequest;
 import com.blas.blascommon.payload.FileAttachment;
 import com.blas.blascommon.payload.HtmlEmailWithAttachmentRequest;
 import com.blas.blascommon.utils.TemplateUtils;
@@ -45,9 +44,8 @@ public class HtmlWithAttachmentEmailService extends EmailService<HtmlEmailWithAt
   @Override
   protected void addAttachmentToMail(MimeMessage message,
       HtmlEmailWithAttachmentRequest htmlEmailWithAttachmentRequest,
-      AtomicBoolean isAddAttachFileCompletely, List<String> tempFileList,
-      List<EmailRequest> failedEmailList, Map<String, String> data, String htmlContent)
-      throws MessagingException, FileUploadException {
+      AtomicBoolean isAddAttachFileCompletely, List<String> tempFileList, Map<String, String> data,
+      String htmlContent) throws MessagingException, FileUploadException {
     try {
       MimeBodyPart messageBodyPartContent = new MimeBodyPart();
       messageBodyPartContent.setContent(htmlContent, "text/html; charset=utf-8");
@@ -75,7 +73,7 @@ public class HtmlWithAttachmentEmailService extends EmailService<HtmlEmailWithAt
         writeByteArrayToFile(fileContent, TEMP_ELM_PATH + tempFileName);
         tempFileList.add(tempFileName);
         addAttachmentToMultipart(multipart, fileName, TEMP_ELM_PATH + tempFileName);
-      } catch (IOException e) {
+      } catch (IOException exception) {
         addAttachmentFailedHandler(htmlEmailWithAttachmentRequest, fileName,
             isAddAttachFileCompletely);
       } catch (MessagingException e1) {

@@ -21,9 +21,7 @@ import java.util.Objects;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,10 +41,8 @@ public class HtmlEmailUsingInputFileController extends EmailController<HtmlEmail
 
   public HtmlEmailUsingInputFileController(CentralizedLogService centralizedLogService,
       EmailService<HtmlEmailRequest> emailService, EmailLogService emailLogService,
-      @Qualifier("getAsyncExecutor") ThreadPoolTaskExecutor taskExecutor,
       Set<String> needFieldMasks, AuthUserService authUserService) {
-    super(centralizedLogService, emailService, emailLogService, taskExecutor, authUserService,
-        needFieldMasks);
+    super(centralizedLogService, emailService, emailLogService, authUserService, needFieldMasks);
   }
 
   @PostMapping(value = "/html-by-excel")

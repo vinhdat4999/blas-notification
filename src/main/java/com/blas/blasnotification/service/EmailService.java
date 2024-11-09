@@ -35,9 +35,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +51,7 @@ import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -59,7 +59,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public abstract class EmailService<T extends EmailRequest> {
 
-  private static final String INTERNAL_SYSTEM_MSG = "Blas Email internal error";
+  private static final String INTERNAL_SYSTEM_MSG = "Blas Email internal server error";
   private static final String INVALID_EMAIL_MSG = "Invalid receiver email: %s";
   private static final String TOO_MANY_REQUEST_TO_BLAS_EMAIL_PLEASE_TRY_AGAIN = "Too many request to blas-notification. Please try again.";
 
@@ -85,85 +85,68 @@ public abstract class EmailService<T extends EmailRequest> {
   @Value("${blas.blas-notification.waitTimeFirstTryToSendEmailAgain}")
   protected long waitTimeFirstTryToSendEmailAgain;
 
-  public void sendEmail(T emailRequest, List<EmailRequest> sentEmailList,
-      List<EmailRequest> failedEmailList, ThreadPoolExecutor executor, CountDownLatch latch)
-      throws IOException {
+  @Async
+  public CompletableFuture<EmailRequest> sendEmail(T emailRequest) throws IOException {
     MDC.put(EMAIL_LOG_ID, UUID.randomUUID().toString());
-
     String unkMessage = validateHeader(getEmailTemplate(emailRequest.getEmailTemplateName()),
         emailRequest.getData().keySet());
 
     MailCredential mailCredential = mailSelectService.getNextMailCredential();
     JavaMailSender javaMailSender = buildJavaEmailSender(mailCredential);
     MimeMessage message = javaMailSender.createMimeMessage();
+
     try {
-      Map<String, String> contextMap = MDC.getCopyOfContextMap();
-      executor.execute(() -> {
-        if (contextMap != null) {
-          MDC.setContextMap(contextMap);
-        }
-        if (isInvalidReceiverEmail(emailRequest, failedEmailList, latch)) {
-          return;
-        }
-        try {
-          Thread.sleep(100);
-        } catch (InterruptedException exception) {
-          log.error(exception.toString());
-          Thread.currentThread().interrupt();
-        }
-        try {
-          MimeMessageHelper helper = new MimeMessageHelper(message,
-              emailRequest instanceof HtmlEmailWithAttachmentRequest);
-          helper.setFrom(mailCredential.getUsername());
-          helper.setTo(emailRequest.getEmailTo());
-          helper.setSubject(emailRequest.getTitle());
-          String htmlContent = templateUtils.generateHtmlContent(
-              EmailTemplate.valueOf(emailRequest.getEmailTemplateName()),
-              emailRequest.getData());
 
-          if (emailRequest instanceof HtmlEmailWithAttachmentRequest) {
-            AtomicBoolean isAddAttachFileCompletely = new AtomicBoolean(true);
-            List<String> tempFileList = new ArrayList<>();
-            addAttachmentToMail(message, emailRequest, isAddAttachFileCompletely, tempFileList,
-                failedEmailList, emailRequest.getData(), htmlContent);
-          }
+      if (isInvalidReceiverEmail(emailRequest)) {
+        return CompletableFuture.completedFuture(emailRequest);
+      }
 
-          helper.setText(htmlContent, true);
-          if (emailRequest instanceof HtmlEmailRequest) {
-            message.setContent(htmlContent, "text/html; charset=UTF-8");
-          }
+      MimeMessageHelper helper = new MimeMessageHelper(message,
+          emailRequest instanceof HtmlEmailWithAttachmentRequest);
+      helper.setFrom(mailCredential.getUsername());
+      helper.setTo(emailRequest.getEmailTo());
+      helper.setSubject(emailRequest.getTitle());
+      String htmlContent = templateUtils.generateHtmlContent(
+          EmailTemplate.valueOf(emailRequest.getEmailTemplateName()),
+          emailRequest.getData());
 
-          javaMailSender.send(message);
-          emailRequest.setStatus(STATUS_SUCCESS);
-          sentEmailList.add(emailRequest);
-          Metrics.counter("blas.blas-notification.number-of-first-trying").increment();
-        } catch (MailException | MessagingException mailException) {
-          saveCentralizedLog(mailException, mailCredential, emailRequest, false);
-          trySendingEmail(emailRequest, message, sentEmailList, failedEmailList);
-        } catch (IOException ioException) {
-          errorHandler(ioException, mailCredential, emailRequest, failedEmailList,
-              ioException.getMessage());
-        } finally {
-          emailRequest.setSentTime(now());
-          emailRequest.setReasonSendFailed(
-              StringUtils.isEmpty(emailRequest.getReasonSendFailed()) ? unkMessage
-                  : emailRequest.getReasonSendFailed() + DOT + SPACE + unkMessage);
-          latch.countDown();
-        }
-      });
+      if (emailRequest instanceof HtmlEmailWithAttachmentRequest) {
+        AtomicBoolean isAddAttachFileCompletely = new AtomicBoolean(true);
+        List<String> tempFileList = new ArrayList<>();
+        addAttachmentToMail(message, emailRequest, isAddAttachFileCompletely, tempFileList,
+            emailRequest.getData(), htmlContent);
+      }
+
+      helper.setText(htmlContent, true);
+      if (emailRequest instanceof HtmlEmailRequest) {
+        message.setContent(htmlContent, "text/html; charset=UTF-8");
+      }
+
+      javaMailSender.send(message);
+      emailRequest.setStatus(STATUS_SUCCESS);
+      Metrics.counter("blas.blas-notification.number-of-first-trying").increment();
+    } catch (MailException | MessagingException mailException) {
+      saveCentralizedLog(mailException, mailCredential, emailRequest, false);
+      trySendingEmail(emailRequest, message);
+    } catch (IOException ioException) {
+      errorHandler(ioException, mailCredential, emailRequest, ioException.getMessage());
     } catch (RejectedExecutionException exception) {
       emailRequest.setSentTime(now());
       emailRequest.setReasonSendFailed(TOO_MANY_REQUEST_TO_BLAS_EMAIL_PLEASE_TRY_AGAIN);
       saveCentralizedLog(exception, mailCredential, emailRequest, false);
-      failedEmailList.add(emailRequest);
-      latch.countDown();
+    } finally {
+      emailRequest.setSentTime(now());
+      emailRequest.setReasonSendFailed(
+          StringUtils.isEmpty(emailRequest.getReasonSendFailed()) ? unkMessage
+              : emailRequest.getReasonSendFailed() + DOT + SPACE + unkMessage);
     }
+
+    return CompletableFuture.completedFuture(emailRequest);
   }
 
   protected abstract void addAttachmentToMail(MimeMessage message, T htmlEmailWithAttachmentRequest,
-      AtomicBoolean isAddAttachFileCompletely, List<String> tempFileList,
-      List<EmailRequest> failedEmailList, Map<String, String> data, String htmlContent)
-      throws MessagingException, FileUploadException;
+      AtomicBoolean isAddAttachFileCompletely, List<String> tempFileList, Map<String, String> data,
+      String htmlContent) throws MessagingException, FileUploadException;
 
   private void saveCentralizedLog(Exception exception, MailCredential mailCredential,
       Object object, boolean sendEmail) {
@@ -194,19 +177,15 @@ public abstract class EmailService<T extends EmailRequest> {
     return mailSender;
   }
 
-  private boolean isInvalidReceiverEmail(T emailRequest,
-      List<EmailRequest> failedEmailList, CountDownLatch latch) {
+  private boolean isInvalidReceiverEmail(T emailRequest) {
     if (isValidEmail(emailRequest.getEmailTo())) {
       return false;
     }
     emailRequest.setReasonSendFailed(format(INVALID_EMAIL_MSG, emailRequest.getEmailTo()));
-    failedEmailList.add(emailRequest);
-    latch.countDown();
     return true;
   }
 
-  private void trySendingEmail(T emailRequest, MimeMessage message,
-      List<EmailRequest> sentEmailList, List<EmailRequest> failedEmailList) {
+  private void trySendingEmail(T emailRequest, MimeMessage message) {
     int attempts = 1;
     while (attempts <= numberTryToSendEmailAgain) {
       MailCredential mailCredential = mailSelectService.getNextMailCredential();
@@ -216,28 +195,28 @@ public abstract class EmailService<T extends EmailRequest> {
         TimeUnit.MILLISECONDS.sleep(waitTime);
         JavaMailSender javaMailSender = buildJavaEmailSender(mailCredential);
         javaMailSender.send(message);
-        sentEmailList.add(emailRequest);
         emailRequest.setStatus(STATUS_SUCCESS);
         emailRequest.setSentTime(now());
+        CompletableFuture.completedFuture(emailRequest);
         return;
-      } catch (MailException mailException) {
-        saveCentralizedLog(mailException, mailCredential, emailRequest, false);
+      } catch (MailException | InterruptedException exception) {
+        saveCentralizedLog(exception, mailCredential, emailRequest, false);
         attempts++;
-      } catch (InterruptedException retryException) {
-        saveCentralizedLog(retryException, mailCredential, emailRequest, false);
-        attempts++;
-        Thread.currentThread().interrupt();
+
+        if (exception instanceof InterruptedException) {
+          Thread.currentThread().interrupt();
+        }
       }
     }
+
     emailRequest.setReasonSendFailed(INTERNAL_SYSTEM_MSG);
-    failedEmailList.add(emailRequest);
+    CompletableFuture.completedFuture(emailRequest);
   }
 
   private void errorHandler(Exception exception, MailCredential mailCredential, T emailRequest,
-      List<EmailRequest> failedEmailList, String errorMessage) {
+      String errorMessage) {
     saveCentralizedLog(exception, mailCredential, emailRequest, true);
     emailRequest.setReasonSendFailed(errorMessage);
-    failedEmailList.add(emailRequest);
   }
 
   private String validateHeader(EmailTemplate emailTemplate, Set<String> variables)
