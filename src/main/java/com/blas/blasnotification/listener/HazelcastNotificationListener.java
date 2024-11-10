@@ -1,4 +1,4 @@
-package com.blas.blasnotification.controller;
+package com.blas.blasnotification.listener;
 
 import static com.blas.blascommon.constants.MessageTopic.BLAS_NOTIFICATION_QUEUE;
 

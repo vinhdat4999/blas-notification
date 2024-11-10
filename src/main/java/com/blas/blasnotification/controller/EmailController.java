@@ -9,6 +9,7 @@ import static com.blas.blascommon.security.SecurityUtils.isPrioritizedRole;
 import static com.blas.blascommon.utils.JsonUtils.maskJsonWithFields;
 import static com.blas.blascommon.utils.StringUtils.DOT;
 import static com.blas.blascommon.utils.fileutils.exportfile.Excel.exportToExcel;
+import static com.blas.blasnotification.utils.EmailUtils.buildSendingResult;
 import static java.lang.System.currentTimeMillis;
 import static java.time.LocalDateTime.now;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -18,7 +19,6 @@ import com.blas.blascommon.core.model.EmailLog;
 import com.blas.blascommon.core.service.AuthUserService;
 import com.blas.blascommon.core.service.CentralizedLogService;
 import com.blas.blascommon.core.service.EmailLogService;
-import com.blas.blascommon.exceptions.types.BadRequestException;
 import com.blas.blascommon.exceptions.types.ForbiddenException;
 import com.blas.blascommon.payload.EmailRequest;
 import com.blas.blascommon.payload.EmailResponse;
@@ -30,24 +30,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.core.Authentication;
 
 @Slf4j
 @RequiredArgsConstructor
 public class EmailController<T extends EmailRequest> {
 
-  protected static final String INTERNAL_SYSTEM_ERROR_MSG = "Blas Email internal error. Cannot determine status of emails.";
   protected static final String EMAIL_TO = "emailTo";
   protected static final String TITLE = "title";
   protected static final String EMAIL_TEMPLATE_NAME = "emailTemplateName";
@@ -68,10 +64,6 @@ public class EmailController<T extends EmailRequest> {
   protected final EmailLogService emailLogService;
 
   @Lazy
-  @Qualifier("getAsyncExecutor")
-  protected final ThreadPoolTaskExecutor taskExecutor;
-
-  @Lazy
   private final AuthUserService authUserService;
 
   @Value("${blas.blas-notification.dailyQuotaNormalUser}")
@@ -86,22 +78,16 @@ public class EmailController<T extends EmailRequest> {
       throws IOException {
     int emailNum = emailPayloads.size();
     isPrioritizedRoleOrInQuota(emailNum, authentication);
-    List<EmailRequest> sentEmailList = new CopyOnWriteArrayList<>();
-    List<EmailRequest> failedEmailList = new CopyOnWriteArrayList<>();
-    CountDownLatch latch = new CountDownLatch(emailNum);
 
+    List<CompletableFuture<EmailRequest>> sendEmailTaskFutures = new ArrayList<>();
     for (T emailRequest : emailPayloads) {
-      emailService.sendEmail(emailRequest, sentEmailList, failedEmailList,
-          taskExecutor.getThreadPoolExecutor(), latch);
+      CompletableFuture<EmailRequest> sendEmailTask = emailService.sendEmail(emailRequest);
+      sendEmailTaskFutures.add(sendEmailTask);
     }
+    List<EmailRequest> sentEmailList = new ArrayList<>();
+    List<EmailRequest> failedEmailList = new ArrayList<>();
 
-    try {
-      latch.await();
-    } catch (InterruptedException exception) {
-      centralizedLogService.saveLog(exception, authentication.getName(), emailPayloads, null);
-      Thread.currentThread().interrupt();
-      throw new BadRequestException(INTERNAL_SYSTEM_ERROR_MSG, exception);
-    }
+    buildSendingResult(sendEmailTaskFutures, sentEmailList, failedEmailList);
 
     String fileReport = saveEmailLogFile(emailPayloads, genFileReport);
 
