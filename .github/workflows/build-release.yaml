@@ -106,7 +106,8 @@ jobs:
           cd charts
           ls
           echo aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-          cp ./*.tgz blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
+          cd ../..
+          cp ./*.tgz blas-helm/charts/${{ needs.prepare.outputs.serviceName }}/
           cd blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
           ls
 
