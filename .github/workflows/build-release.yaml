@@ -102,7 +102,7 @@ jobs:
           version: 'latest'
 
       - name: Package Helm chart
-        run: helm package ./${{ needs.prepare.outputs.serviceName }}
+        run: helm package ./charts/${{ needs.prepare.outputs.serviceName }}
 
       - name: Update Helm repo index
         run: helm repo index . --url https://vinhdat4999.github.io/blas-helm-repository/
