@@ -109,7 +109,7 @@ jobs:
       # Copy the packaged Helm chart to the blas-helm repo
       - name: Copy Helm Chart
         run: |
-          cp ../*.tgz blas-helm/charts/
+          cp ./*.tgz blas-helm/charts/
           cd blas-helm
 
       # Update Helm repo index file
