@@ -90,7 +90,7 @@ jobs:
       # Package the Helm chart
       - name: Package Helm Chart
         run: |
-          helm package helm-chart/ # Assuming your Helm chart is in the 'helm-chart' directory
+          helm package ./charts/${{ needs.prepare.outputs.serviceName }}
 
       # Package the Helm chart from the service repository
       - name: Package Helm Chart
