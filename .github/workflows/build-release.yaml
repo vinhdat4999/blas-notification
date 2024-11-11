@@ -61,6 +61,50 @@ jobs:
             echo "✅ Versions match: Chart Version ($serviceChartVersion) == POM Version ($serviceVersion)"
           fi
 
+  helm-package:
+    needs: prepare
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+
+      - name: Package Helm Chart
+        run: |
+          helm package ./charts/${{ needs.prepare.outputs.serviceName }}
+
+      - name: Clone Centralized Helm Repo
+        run: |
+          git clone https://github.com/vinhdat4999/blas-helm.git
+          cd blas-helm
+          git checkout gh-pages
+
+      - name: Copy Helm Chart
+        run: |
+          mkdir -p blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
+          cp ./*.tgz ./blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
+
+      - name: Update service Helm Repo Index
+        run: |
+          cd blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
+          helm repo index . --url https://vinhdat4999.github.io/blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
+
+      - name: Update parent Helm Repo Index
+        run: |
+          cd blas-helm
+          helm repo index ./charts --url https://vinhdat4999.github.io/blas-helm
+
+      - name: Push Changes to Centralized Helm Repo
+        run: |
+          cd blas-helm
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Update Helm chart from ${{ needs.prepare.outputs.serviceName }} [CI]"
+          git push https://vinhdat4999:${{ secrets.PACKAGE }}@github.com/vinhdat4999/blas-helm.git gh-pages
+
   build-and-release:
     needs: prepare
     runs-on: ubuntu-latest
@@ -81,38 +125,6 @@ jobs:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-maven-
-
-      - name: Setup Helm
-        uses: azure/setup-helm@v3
-
-      - name: Package Helm Chart
-        run: |
-          helm package ./charts/${{ needs.prepare.outputs.serviceName }}
-
-      - name: Clone Centralized Helm Repo
-        run: |
-          git clone https://github.com/vinhdat4999/blas-helm.git
-          cd blas-helm
-          git checkout gh-pages
-
-      - name: Copy Helm Chart
-        run: |
-          mkdir -p blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
-          cp ./*.tgz ./blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
-
-      - name: Update Helm Repo Index
-        run: |
-          cd blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
-          helm repo index . --url https://vinhdat4999.github.io/blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
-
-      - name: Push Changes to Centralized Helm Repo
-        run: |
-          cd blas-helm
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "Update Helm chart from ${{ needs.prepare.outputs.serviceName }} [CI]"
-          git push https://vinhdat4999:${{ secrets.PACKAGE }}@github.com/vinhdat4999/blas-helm.git gh-pages
 
       - name: Build with Maven
         run: mvn -B package --file pom.xml
