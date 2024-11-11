@@ -83,15 +83,9 @@ jobs:
 
       - name: Copy Helm Chart
         run: |
-          mkdir -p blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
-          cp ./*.tgz ./blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
+          cp ./*.tgz ./blas-helm/charts
 
-      - name: Update service Helm Repo Index
-        run: |
-          cd blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
-          helm repo index . --url https://vinhdat4999.github.io/blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
-
-      - name: Update parent Helm Repo Index
+      - name: Update Helm Repo Index
         run: |
           cd blas-helm
           helm repo index ./charts --url https://vinhdat4999.github.io/blas-helm
