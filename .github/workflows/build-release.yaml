@@ -83,54 +83,35 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-maven-
 
-      # Set up Helm
       - name: Setup Helm
         uses: azure/setup-helm@v3
 
-      # Package the Helm chart
       - name: Package Helm Chart
         run: |
           helm package ./charts/${{ needs.prepare.outputs.serviceName }}
 
-      # Package the Helm chart from the service repository
-      - name: Package Helm Chart
-        run: |
-          helm package ./charts/${{ needs.prepare.outputs.serviceName }}
-
-      # Clone the centralized Helm repo (blas-helm)
       - name: Clone Centralized Helm Repo
         run: |
           git clone https://github.com/vinhdat4999/blas-helm.git
           cd blas-helm
           git checkout gh-pages
-#        env:
-#          HELM_REPO_TOKEN: ${{ secrets.PACKAGE }}
 
-      # Copy the packaged Helm chart to the blas-helm repo
       - name: Copy Helm Chart
         run: |
-          cp ./*.tgz blas-helm/charts/
+          cp ./*.tgz blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
           cd blas-helm
 
-      # Update Helm repo index file
       - name: Update Helm Repo Index
         run: |
-          cd blas-helm
-          ls
-          echo aaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-          cd charts
-          ls
-          echo aaaaaaaaaaaaaaaaaaaaaaaaaaaaa
           helm repo index . --url https://vinhdat4999.github.io/blas-helm/charts
 
-      # Commit and push changes to blas-helm
       - name: Push Changes to Centralized Helm Repo
         run: |
           cd blas-helm
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -m "Update Helm chart from blas-notification [CI]"
+          git commit -m "Update Helm chart from ${{ needs.prepare.outputs.serviceName }} [CI]"
           git push https://vinhdat4999:${{ secrets.PACKAGE }}@github.com/vinhdat4999/blas-helm.git gh-pages
           
           
