@@ -116,7 +116,9 @@ jobs:
       - name: Update Helm Repo Index
         run: |
           echo $(pwd)
+          ls
           cd charts
+          ls
           echo $(pwd)
           cd ..
           helm repo index ./charts/. --url https://vinhdat4999.github.io/blas-helm/charts
