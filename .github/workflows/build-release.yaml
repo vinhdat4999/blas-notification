@@ -121,8 +121,7 @@ jobs:
           cd charts
           ls
           echo aaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-          cd ..
-          helm repo index ../. --url https://vinhdat4999.github.io/blas-helm/charts
+          helm repo index . --url https://vinhdat4999.github.io/blas-helm/charts
 
       # Commit and push changes to blas-helm
       - name: Push Changes to Centralized Helm Repo
