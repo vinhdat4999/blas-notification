@@ -97,6 +97,7 @@ jobs:
 
       - name: Copy Helm Chart
         run: |
+          mkdir -p blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
           cp ./*.tgz ./blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
 
       - name: Update Helm Repo Index
