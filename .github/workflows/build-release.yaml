@@ -31,6 +31,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install libxml2-utils
 
+      - name: Extract service name pom.xml
+        id: extractName
+        run: |
+          serviceName=$(xmllint --xpath '/*[local-name()="project"]/*[local-name()="artifactId"]/text()' pom.xml)
+          echo "serviceName=$serviceName"
+          echo "serviceName=$serviceName" >> $GITHUB_OUTPUT
+
       - name: Get chart version
         id: getChartVersion
         run: |
@@ -64,13 +71,6 @@ jobs:
           else
             echo "✅ Versions match: Chart Version ($serviceChartVersion) == POM Version ($serviceVersion)"
           fi
-
-      - name: Extract service name pom.xml
-        id: extractName
-        run: |
-          serviceName=$(xmllint --xpath '/*[local-name()="project"]/*[local-name()="artifactId"]/text()' pom.xml)
-          echo "serviceName=$serviceName"
-          echo "serviceName=$serviceName" >> $GITHUB_OUTPUT
   
 
   build-and-release:
