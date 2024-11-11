@@ -10,6 +10,7 @@ jobs:
     outputs:
       serviceName: ${{steps.extractName.outputs.serviceName}}
       serviceVersion: ${{steps.extractVersion.outputs.serviceVersion}}
+      serviceChartVersion: ${{steps.extractChartVersion.outputs.serviceChartVersion}}
 
     steps:
       - uses: actions/checkout@v4
@@ -66,7 +67,7 @@ jobs:
           echo "Comparing versions: Chart Version=$serviceChartVersion, POM Version=$serviceVersion"
 
           if [ "$serviceChartVersion" != "$serviceVersion" ]; then
-            echo "❌ Versions do not match: Chart Version ($serviceChartVersion) != POM Version ($serviceVersion)"
+            echo "❌ Versions not match: Chart Version ($serviceChartVersion) != POM Version ($serviceVersion)"
             exit 1
           else
             echo "✅ Versions match: Chart Version ($serviceChartVersion) == POM Version ($serviceVersion)"
