@@ -98,24 +98,11 @@ jobs:
 
       - name: Copy Helm Chart
         run: |
-          ls
-          echo aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-          cd blas-helm
-          ls
-          echo aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-          cd charts
-          ls
-          echo aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-          cd ../..
-          ls
-          echo aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-          echo cp ./*.tgz ./blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
           cp ./*.tgz ./blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
-          cd blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
-          ls
 
       - name: Update Helm Repo Index
         run: |
+          cd blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
           helm repo index . --url https://vinhdat4999.github.io/blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
 
       - name: Push Changes to Centralized Helm Repo
