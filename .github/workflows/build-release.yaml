@@ -69,6 +69,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Publish Helm charts
+        uses: helm/chart-releaser-action@v1
+        with:
+          charts_dir: charts
+
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
