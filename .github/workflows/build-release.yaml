@@ -101,8 +101,8 @@ jobs:
       - name: Clone Centralized Helm Repo
         run: |
           git clone https://github.com/vinhdat4999/blas-helm.git
-          git checkout gh-pages
           cd blas-helm
+          git checkout gh-pages
         env:
           HELM_REPO_TOKEN: ${{ secrets.PACKAGE }}
 
