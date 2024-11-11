@@ -103,8 +103,8 @@ jobs:
           git clone https://github.com/vinhdat4999/blas-helm.git
           cd blas-helm
           git checkout gh-pages
-        env:
-          HELM_REPO_TOKEN: ${{ secrets.PACKAGE }}
+#        env:
+#          HELM_REPO_TOKEN: ${{ secrets.PACKAGE }}
 
       # Copy the packaged Helm chart to the blas-helm repo
       - name: Copy Helm Chart
@@ -125,7 +125,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
           git commit -m "Update Helm chart from blas-notification [CI]"
-          git push https://vinhdat4999:${{ secrets.HELM_REPO_TOKEN }}@github.com/vinhdat4999/blas-helm.git gh-pages
+          git push https://vinhdat4999:${{ secrets.PACKAGE }}@github.com/vinhdat4999/blas-helm.git gh-pages
           
           
           
