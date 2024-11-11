@@ -39,15 +39,10 @@ jobs:
           echo "serviceName=$serviceName"
           echo "serviceName=$serviceName" >> $GITHUB_OUTPUT
 
-      - name: Get chart version
-        id: getChartVersion
-        run: |
-          yq e .version ./charts/${{ steps.extractName.outputs.serviceName }}/Chart.yaml
-
       - name: Extract chart version
         id: extractChartVersion
         run: |
-          serviceChartVersion=${{ steps.getChartVersion.outputs.result }}
+          serviceChartVersion=$(yq e .version ./charts/${{ steps.extractName.outputs.serviceName }}/Chart.yaml)
           echo "serviceChartVersion=$serviceChartVersion"
           echo "serviceChartVersion=$serviceChartVersion" >> $GITHUB_OUTPUT
 
