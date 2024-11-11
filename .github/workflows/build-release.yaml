@@ -104,7 +104,7 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ steps.extractName.outputs.serviceName }}:${{ steps.extractVersion.outputs.serviceVersion }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ needs.prepare.outputs.serviceName }}:${{ needs.prepare.outputs.serviceVersion }}
 
       - name: Logout from Docker Hub
         run: docker logout
