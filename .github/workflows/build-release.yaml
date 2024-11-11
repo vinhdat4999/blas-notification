@@ -95,9 +95,11 @@ jobs:
           git clone https://github.com/vinhdat4999/blas-helm.git
           cd blas-helm
           git checkout gh-pages
+          echo $(pwd)
 
       - name: Copy Helm Chart
         run: |
+          echo $(pwd)
           cp ./*.tgz blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
           cd blas-helm
 
