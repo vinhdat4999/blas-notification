@@ -120,6 +120,7 @@ jobs:
       # Commit and push changes to blas-helm
       - name: Push Changes to Centralized Helm Repo
         run: |
+          cd blas-helm
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
