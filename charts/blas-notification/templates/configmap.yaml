@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{.Chart.Name}}-service-config
+  name: {{ .Chart.Name }}-service-config
 data:
   application.yaml: |
     server:
@@ -9,6 +9,13 @@ data:
     spring:
       profiles:
         active: {{ index .Values "service-config" "spring" "profile" }}
+      task:
+        execution:
+          pool:
+            core-size: 5
+            max-size: 10
+            queue-capacity: 10000
+            keep-alive: 5s
       datasource:
         driver-class-name: com.mysql.cj.jdbc.Driver
         url: ${mysql-url}
@@ -55,7 +62,7 @@ data:
         dailyQuotaNormalUser: 10
         numberTryToSendEmailAgain: 9
         waitTimeFirstTryToSendEmailAgain: 1000 #miliseconds
-        needMaskFields: password
+        needMaskFields: password,authenKey
       blas-idp:
         isSendEmailAlert: true
       hazelcast:

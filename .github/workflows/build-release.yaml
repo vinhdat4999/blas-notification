@@ -5,8 +5,11 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  build-and-release:
+  prepare:
     runs-on: ubuntu-latest
+    outputs:
+      serviceName: ${{steps.extractName.outputs.serviceName}}
+      serviceVersion: ${{steps.extractVersion.outputs.serviceVersion}}
 
     steps:
       - uses: actions/checkout@v4
@@ -28,19 +31,54 @@ jobs:
           sudo apt-get update
           sudo apt-get install libxml2-utils
 
+      - name: Get chart version
+        id: getChartVersion
+        run: |
+          yq e .version ./charts/${{ steps.extractName.outputs.serviceName }}/Chart.yaml
+
+      - name: Extract chart version
+        id: extractChartVersion
+        run: |
+          serviceChartVersion=${{ steps.getChartVersion.outputs.result }}
+          echo "serviceChartVersion=$serviceChartVersion"
+          echo "serviceChartVersion=$serviceChartVersion" >> $GITHUB_OUTPUT
+
+      - name: Extract application version from pom.xml
+        id: extractVersion
+        run: |
+          serviceVersion=$(xmllint --xpath '/*[local-name()="project"]/*[local-name()="version"]/text()' pom.xml | sed "s/-SNAPSHOT//")
+          echo "serviceVersion=$serviceVersion"
+          echo "serviceVersion=$serviceVersion" >> $GITHUB_OUTPUT
+
+      - name: Compare chart version and pom version
+        id: compareVersions
+        run: |
+          serviceChartVersion="${{ steps.extractChartVersion.outputs.serviceChartVersion }}"
+          serviceVersion="${{ steps.extractVersion.outputs.serviceVersion }}"
+
+          echo "Comparing versions: Chart Version=$serviceChartVersion, POM Version=$serviceVersion"
+
+          if [ "$serviceChartVersion" != "$serviceVersion" ]; then
+            echo "❌ Versions do not match: Chart Version ($serviceChartVersion) != POM Version ($serviceVersion)"
+            exit 1
+          else
+            echo "✅ Versions match: Chart Version ($serviceChartVersion) == POM Version ($serviceVersion)"
+          fi
+
       - name: Extract service name pom.xml
         id: extractName
         run: |
           serviceName=$(xmllint --xpath '/*[local-name()="project"]/*[local-name()="artifactId"]/text()' pom.xml)
           echo "serviceName=$serviceName"
           echo "serviceName=$serviceName" >> $GITHUB_OUTPUT
+  
 
-      - name: Extract release version from pom.xml
-        id: extractVersion
-        run: |
-          serviceVersion=$(xmllint --xpath '/*[local-name()="project"]/*[local-name()="version"]/text()' pom.xml | sed "s/-SNAPSHOT//")
-          echo "serviceVersion=$serviceVersion"
-          echo "serviceVersion=$serviceVersion" >> $GITHUB_OUTPUT
+  build-and-release:
+    needs: prepare
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Cache Maven dependencies
         uses: actions/cache@v2
