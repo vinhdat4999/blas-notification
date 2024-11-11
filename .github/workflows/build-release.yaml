@@ -98,6 +98,7 @@ jobs:
 
       - name: Copy Helm Chart
         run: |
+          ls
           cp ./*.tgz blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
           cd blas-helm/charts/${{ needs.prepare.outputs.serviceName }}
           ls
