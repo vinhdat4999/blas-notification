@@ -115,7 +115,7 @@ jobs:
       # Update Helm repo index file
       - name: Update Helm Repo Index
         run: |
-          helm repo index charts/${{ needs.prepare.outputs.serviceName }} --url https://vinhdat4999.github.io/blas-helm/charts
+          helm repo index ./charts/. --url https://vinhdat4999.github.io/blas-helm/charts
 
       # Commit and push changes to blas-helm
       - name: Push Changes to Centralized Helm Repo
