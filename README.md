@@ -4,6 +4,7 @@
 
 | Version | Date release | Tickets/Notes                                                       |
 |---------|--------------|---------------------------------------------------------------------|
+| 5.2.0   | 23/11/2024   | Uptake blas-common v6.3.0                                           |
 | 5.1.0   | 10/11/2024   | Update to CompletableFuture                                         |
 | 5.0.0   | 08/11/2024   | Rename blas-email to blas-notification service                      |
 | 4.1.0   | 29/10/2024   | Trace the email sending result                                      |

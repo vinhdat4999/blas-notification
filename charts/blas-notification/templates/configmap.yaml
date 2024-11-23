@@ -12,10 +12,10 @@ data:
       task:
         execution:
           pool:
-            core-size: 5
-            max-size: 10
-            queue-capacity: 10000
-            keep-alive: 5s
+            core-size: {{ index .Values "service-config" "spring" "task" "execution" "pool" "core-size" }}
+            max-size: {{ index .Values "service-config" "spring" "task" "execution" "pool" "max-size" }}
+            queue-capacity: {{ index .Values "service-config" "spring" "task" "execution" "pool" "queue-capacity" }}
+            keep-alive: {{ index .Values "service-config" "spring" "task" "execution" "pool" "keep-alive" }}
       datasource:
         driver-class-name: com.mysql.cj.jdbc.Driver
         url: ${mysql-url}
@@ -47,24 +47,24 @@ data:
           probes:
             enabled: true
     blas:
-      aliasBlasPrivateKey: blasSecretKey
-      certificate: BlasSecretKey.p12
+      aliasBlasPrivateKey: {{ index .Values "service-config" "blas" "aliasBlasPrivateKey" }}
+      certificate: {{ index .Values "service-config" "blas" "certificate" }}
       service:
         serviceName: {{ .Chart.Name }}
       blas-service-support:
-        throughServiceSupport: true
-        endpointCheckMaintenance: http://blas-service-support.{{ .Values.aksNamespace }}.svc.cluster.local:8084/maintenance/check
+        throughServiceSupport: {{ index .Values "service-config" "blas" "blas-service-support" "throughServiceSupport" }}
+        endpointCheckMaintenance: {{ index .Values "service-config" "blas" "blas-service-support" "endpointCheckMaintenance" }}
       blas-notification:
         mail:
           host: smtp.gmail.com
           port: 465
           credentials: ${mail-credentials}
-        dailyQuotaNormalUser: 10
-        numberTryToSendEmailAgain: 9
-        waitTimeFirstTryToSendEmailAgain: 1000 #miliseconds
-        needMaskFields: password,authenKey
+        dailyQuotaNormalUser: {{ index .Values "service-config" "blas" "blas-notification" "dailyQuotaNormalUser" }}
+        numberTryToSendEmailAgain: {{ index .Values "service-config" "blas" "blas-notification" "numberTryToSendEmailAgain" }}
+        waitTimeFirstTryToSendEmailAgain: {{ index .Values "service-config" "blas" "blas-notification" "waitTimeFirstTryToSendEmailAgain" }}
+        needMaskFields: {{ index .Values "service-config" "blas" "blas-notification" "needMaskFields" }}
       blas-idp:
-        isSendEmailAlert: true
+        isSendEmailAlert: {{ index .Values "service-config" "blas" "blas-idp" "isSendEmailAlert" }}
       hazelcast:
         aksNamespace: {{ .Values.aksNamespace }}
         hazelcastService: {{ .Values.hazelcastService }}

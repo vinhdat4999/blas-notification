@@ -102,6 +102,28 @@ affinity: { }
 service-config:
   spring:
     profile: aks
+    task:
+      execution:
+        pool:
+          core-size: 5
+          max-size: 10
+          queue-capacity: 10000
+          keep-alive: 5s
+
+  blas:
+    aliasBlasPrivateKey: blasSecretKey
+    certificate: BlasSecretKey.p12
+    blas-service-support:
+      throughServiceSupport: true
+      endpointCheckMaintenance: http://blas-service-support.dev.svc.cluster.local:8084/maintenance/check
+    blas-idp:
+      isSendEmailAlert: true
+    blas-notification:
+      dailyQuotaNormalUser: 10
+      numberTryToSendEmailAgain: 9
+      waitTimeFirstTryToSendEmailAgain: 1000 #miliseconds
+      needMaskFields: password,authenKey
+
   logging:
     level:
       root: INFO
