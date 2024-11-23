@@ -1,8 +1,8 @@
 package com.blas.blasnotification.service;
 
 import static com.blas.blascommon.security.SecurityUtils.base64Decode;
-import static com.blas.blascommon.utils.IdUtils.genUUID;
 import static com.blas.blascommon.utils.fileutils.FileUtils.writeByteArrayToFile;
+import static com.blas.blascommon.utils.idutils.IdUtils.genUniqueId;
 import static java.lang.String.format;
 
 import com.blas.blascommon.core.service.CentralizedLogService;
@@ -66,7 +66,7 @@ public class HtmlWithAttachmentEmailService extends EmailService<HtmlEmailWithAt
       HtmlEmailWithAttachmentRequest htmlEmailWithAttachmentRequest, List<String> tempFileList,
       AtomicBoolean isAddAttachFileCompletely) {
     for (FileAttachment fileAttach : htmlEmailWithAttachmentRequest.getFileList()) {
-      String tempFileName = genUUID();
+      String tempFileName = genUniqueId();
       String fileName = fileAttach.getFileName();
       try {
         byte[] fileContent = base64Decode(fileAttach.getFileContent());
