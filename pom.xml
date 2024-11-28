@@ -6,15 +6,16 @@
   <parent>
     <groupId>com.blas</groupId>
     <artifactId>blas-bom</artifactId>
-    <version>1.23.0</version>
+    <version>1.24.0</version>
   </parent>
   <artifactId>blas-notification</artifactId>
-  <version>5.2.0</version>
+  <version>5.3.0</version>
   <name>blas-notification</name>
   <description>blas-notification</description>
   <properties>
     <java.version>${project.java.version}</java.version>
-    <com.blas.blas.common.version>6.3.0</com.blas.blas.common.version>
+    <com.blas.blas.common.version>6.6.0</com.blas.blas.common.version>
+    <com.blas.blas-logging-aspect.version>1.0.0</com.blas.blas-logging-aspect.version>
     <maven.compiler.source>${project.java.version}</maven.compiler.source>
     <maven.compiler.target>${project.java.version}</maven.compiler.target>
   </properties>
@@ -23,6 +24,11 @@
       <groupId>com.blas</groupId>
       <artifactId>blas-common</artifactId>
       <version>${com.blas.blas.common.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.blas</groupId>
+      <artifactId>blas-logging-aspect</artifactId>
+      <version>${com.blas.blas-logging-aspect.version}</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>

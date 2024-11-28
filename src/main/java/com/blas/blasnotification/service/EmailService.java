@@ -1,6 +1,6 @@
 package com.blas.blasnotification.service;
 
-import static com.blas.blascommon.constants.MDCConstant.EMAIL_LOG_ID;
+import static com.blas.blascommon.constants.MdcConstants.EMAIL_LOG_ID;
 import static com.blas.blascommon.enums.EmailTemplate.getEmailTemplate;
 import static com.blas.blascommon.exceptions.BlasErrorCodeEnum.MSG_FORMATTING_ERROR;
 import static com.blas.blascommon.utils.JsonUtils.maskJsonWithFields;
