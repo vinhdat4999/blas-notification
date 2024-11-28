@@ -1,7 +1,7 @@
 package com.blas.blasnotification.controller;
 
-import static com.blas.blascommon.constants.MDCConstant.EMAIL_LOG_ID;
-import static com.blas.blascommon.constants.MDCConstant.GLOBAL_ID;
+import static com.blas.blascommon.constants.MdcConstants.EMAIL_LOG_ID;
+import static com.blas.blascommon.constants.MdcConstants.GLOBAL_ID;
 import static com.blas.blascommon.enums.FileType.XLSX;
 import static com.blas.blascommon.security.SecurityUtils.getUserIdLoggedIn;
 import static com.blas.blascommon.security.SecurityUtils.getUsernameLoggedIn;

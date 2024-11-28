@@ -1,5 +1,6 @@
 package com.blas.blasnotification;
 
+import com.blas.blasloggingaspect.listener.CustomApplicationListener;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -15,6 +16,8 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 public class BlasNotificationApplication {
 
   public static void main(String[] args) {
-    SpringApplication.run(BlasNotificationApplication.class, args);
+    SpringApplication app = new SpringApplication(BlasNotificationApplication.class);
+    app.addListeners(new CustomApplicationListener());
+    app.run(args);
   }
 }

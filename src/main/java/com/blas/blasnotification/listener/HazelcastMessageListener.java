@@ -1,7 +1,9 @@
 package com.blas.blasnotification.listener;
 
-import static com.blas.blascommon.constants.MDCConstant.EMAIL_LOG_ID;
-import static com.blas.blascommon.constants.MDCConstant.GLOBAL_ID;
+import static com.blas.blascommon.constants.MdcConstants.CALLER_ID;
+import static com.blas.blascommon.constants.MdcConstants.CALLER_SERVICE_NAME;
+import static com.blas.blascommon.constants.MdcConstants.EMAIL_LOG_ID;
+import static com.blas.blascommon.constants.MdcConstants.GLOBAL_ID;
 import static com.blas.blascommon.constants.MessageTopic.BLAS_EMAIL_QUEUE;
 import static com.blas.blascommon.utils.JsonUtils.maskJsonWithFields;
 import static com.blas.blasnotification.utils.EmailUtils.buildSendingResult;
@@ -14,10 +16,13 @@ import com.blas.blascommon.core.model.EmailLog;
 import com.blas.blascommon.core.service.AuthUserService;
 import com.blas.blascommon.core.service.EmailLogService;
 import com.blas.blascommon.deserializers.PairJsonDeserializer;
+import com.blas.blascommon.dto.IdContextHazelcastWrapper;
 import com.blas.blascommon.payload.EmailRequest;
 import com.blas.blascommon.payload.HtmlEmailRequest;
 import com.blas.blascommon.payload.HtmlEmailWithAttachmentRequest;
 import com.blas.blasnotification.service.EmailService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.hazelcast.collection.IQueue;
@@ -49,6 +54,8 @@ import org.springframework.stereotype.Service;
 public class HazelcastMessageListener {
 
   private static final String FILE_LIST_KEY = "fileList";
+  private static final TypeReference<IdContextHazelcastWrapper> ID_CONTEXT_TYPE_REFERENCE = new TypeReference<>() {
+  };
 
   @Lazy
   private final EmailService<HtmlEmailRequest> htmlEmailService;
@@ -66,6 +73,9 @@ public class HazelcastMessageListener {
   @Lazy
   private final AuthUserService authUserService;
 
+  @Lazy
+  private final ObjectMapper objectMapper;
+
   @Bean
   @Async
   public CompletableFuture<Void> emailQueueListener(HazelcastInstance hazelcastInstance) {
@@ -75,8 +85,9 @@ public class HazelcastMessageListener {
     List<CompletableFuture<EmailRequest>> sendEmailTaskFutures = new ArrayList<>();
     while (!queue.isEmpty()) {
       try {
+        IdContextHazelcastWrapper messageWrapper = wrapMessageHazelcast(queue.poll());
         log.info("Backup items are handling... Queue: {}", queue);
-        sendEmail(queue.poll(), sendEmailTaskFutures);
+        sendEmail(messageWrapper.getMessage(), sendEmailTaskFutures);
       } catch (IOException exception) {
         log.error(exception.toString());
       }
@@ -94,8 +105,9 @@ public class HazelcastMessageListener {
         List<EmailRequest> failedEmailList = new CopyOnWriteArrayList<>();
         List<CompletableFuture<EmailRequest>> sendEmailTaskFutures = new ArrayList<>();
         try {
+          IdContextHazelcastWrapper messageWrapper = wrapMessageHazelcast(itemEvent.getItem());
           log.info("Hazelcast email queue received new item. Queue: {}", queue);
-          sendEmail(itemEvent.getItem(), sendEmailTaskFutures);
+          sendEmail(messageWrapper.getMessage(), sendEmailTaskFutures);
         } catch (IOException exception) {
           log.error(exception.toString());
         }
@@ -136,6 +148,16 @@ public class HazelcastMessageListener {
         sendEmailTaskFutures.add(sendEmailTask);
       }
     }
+  }
+
+  private IdContextHazelcastWrapper wrapMessageHazelcast(String message)
+      throws JsonProcessingException {
+    IdContextHazelcastWrapper hazelcastWrapper = objectMapper.readValue(message,
+        ID_CONTEXT_TYPE_REFERENCE);
+    MDC.put(GLOBAL_ID, hazelcastWrapper.getGlobalId());
+    MDC.put(CALLER_ID, hazelcastWrapper.getCallerId());
+    MDC.put(CALLER_SERVICE_NAME, hazelcastWrapper.getCallerServiceId());
+    return hazelcastWrapper;
   }
 
   private void postProcessor(List<EmailRequest> sentEmailList, List<EmailRequest> failedEmailList) {
