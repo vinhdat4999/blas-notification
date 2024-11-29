@@ -6,6 +6,7 @@ import static com.blas.blascommon.constants.MdcConstants.EMAIL_LOG_ID;
 import static com.blas.blascommon.constants.MdcConstants.GLOBAL_ID;
 import static com.blas.blascommon.constants.MessageTopic.BLAS_EMAIL_QUEUE;
 import static com.blas.blascommon.utils.JsonUtils.maskJsonWithFields;
+import static com.blas.blasloggingaspect.constant.LayoutConstants.TRACE_ID_FIELD;
 import static com.blas.blasnotification.utils.EmailUtils.buildSendingResult;
 import static java.time.LocalDateTime.now;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
@@ -157,6 +158,7 @@ public class HazelcastMessageListener {
     MDC.put(GLOBAL_ID, hazelcastWrapper.getGlobalId());
     MDC.put(CALLER_ID, hazelcastWrapper.getCallerId());
     MDC.put(CALLER_SERVICE_NAME, hazelcastWrapper.getCallerServiceId());
+    MDC.put(TRACE_ID_FIELD, hazelcastWrapper.getTraceId());
     return hazelcastWrapper;
   }
 
