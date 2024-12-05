@@ -43,6 +43,9 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Chart.Version }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: OTEL_JAVAAGENT_EXTENSIONS
+              value: "./blas-opentelemetry-agent-extension.jar"
           ports:
             - name: http
               containerPort: {{ .Values.service.targetPort }}
